@@ -1,15 +1,15 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Attribute, Html, div, input, text)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html exposing (Html, div, text)
+import Time
 
 
 main =
-    Browser.sandbox
+    Browser.element
         { init = init
         , update = update
+        , subscriptions = subscriptions
         , view = view
         }
 
@@ -19,13 +19,16 @@ main =
 
 
 type alias Model =
-    { content : String
+    { timerPaused : Bool
+    , timer : Int
     }
 
 
-init : Model
-init =
-    { content = "" }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( Model False 0
+    , Cmd.none
+    )
 
 
 
@@ -33,14 +36,31 @@ init =
 
 
 type Msg
-    = Change String
+    = Tick Time.Posix
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Change newContent ->
-            { model | content = newContent }
+        Tick _ ->
+            if not model.timerPaused then
+                ( { model | timer = model.timer + 1 }
+                , Cmd.none
+                )
+
+            else
+                ( model
+                , Cmd.none
+                )
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Time.every 1000 Tick
 
 
 
@@ -50,6 +70,4 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ input [ placeholder "Text here", value model.content, onInput Change ] []
-        , div [] [ text (String.reverse model.content) ]
-        ]
+        [ div [] [ text (String.fromInt model.timer) ] ]
