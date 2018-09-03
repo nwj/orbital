@@ -1,7 +1,6 @@
 port module Main exposing (main)
 
 import Browser
-import Dict exposing (Dict)
 import Html exposing (Html, button, div, input, text)
 import Html.Attributes exposing (placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
@@ -25,7 +24,7 @@ main =
 type alias Model =
     { timerRunning : Bool
     , timer : Int
-    , timingDict : Dict Int String
+    , timings : List Timing
     , newTiming : Int
     , newTimingPhrase : String
     }
@@ -33,13 +32,17 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model False 0 Dict.empty 0 ""
+    ( Model False 0 [] 0 ""
     , Cmd.none
     )
 
 
 port textToSpeechQueue : Json.Encode.Value -> Cmd msg
 
+type alias Timing =
+    { timing : Int
+    , timingPhrase : String
+    }
 
 
 -- UPDATE
@@ -60,9 +63,9 @@ update msg model =
     case msg of
         Tick _ ->
             if model.timerRunning then
-                if Dict.member model.timer model.timingDict then
+                if List.any (\t -> t.timing == model.timer) model.timings then
                     ( { model | timer = model.timer + 1 }
-                    , textToSpeechQueue (Json.Encode.string (Maybe.withDefault "" (Dict.get model.timer model.timingDict)))
+                    , textToSpeechQueue (Json.Encode.list (\t -> Json.Encode.string t) (List.map .timingPhrase (List.filter (\t -> t.timing == model.timer) model.timings)))
                     )
 
                 else
@@ -101,7 +104,7 @@ update msg model =
             )
 
         AddNewTiming ->
-            ( { model | timingDict = Dict.insert model.newTiming model.newTimingPhrase model.timingDict }
+            ( { model | timings = (Timing model.newTiming model.newTimingPhrase) :: model.timings }
             , Cmd.none
             )
 
@@ -148,17 +151,16 @@ viewTimerControl model =
 viewTimings : Model -> List (Html msg)
 viewTimings model =
     let
-        timingsList =
-            Dict.toList model.timingDict
-
+        timingToText : Timing -> String
         timingToText t =
-            secondsToClockString (Tuple.first t) ++ " " ++ Tuple.second t
+            secondsToClockString t.timing ++ " " ++ t.timingPhrase
 
+        viewTiming : Timing -> Html msg
         viewTiming t =
             div []
                 [ text (timingToText t) ]
     in
-    List.map viewTiming timingsList
+    List.map viewTiming (List.sortBy .timing model.timings)
 
 
 secondsToClockString : Int -> String
