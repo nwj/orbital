@@ -89,7 +89,7 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] [ text (String.fromInt model.timer) ]
+        [ div [] [ text (secondsToClockString model.timer) ]
         , div []
             [ button [ onClick ResetTimer ] [ text "Reset" ]
             , viewTimerControl model
@@ -104,3 +104,22 @@ viewTimerControl model =
 
     else
         button [ onClick StartTimer ] [ text "Play" ]
+
+
+secondsToClockString : Int -> String
+secondsToClockString s =
+    let
+        format i =
+            if String.length (String.fromInt i) == 1 then
+                "0" ++ String.fromInt i
+
+            else
+                String.fromInt i
+
+        displayMinutes =
+            format (s // 60)
+
+        displaySeconds =
+            format (modBy 60 s)
+    in
+    displayMinutes ++ " : " ++ displaySeconds
