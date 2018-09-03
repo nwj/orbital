@@ -1,7 +1,8 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, text)
+import Html exposing (Html, button, div, text)
+import Html.Events exposing (onClick)
 import Time
 
 
@@ -19,7 +20,7 @@ main =
 
 
 type alias Model =
-    { timerPaused : Bool
+    { timerRunning : Bool
     , timer : Int
     }
 
@@ -37,13 +38,16 @@ init _ =
 
 type Msg
     = Tick Time.Posix
+    | ResetTimer
+    | StopTimer
+    | StartTimer
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick _ ->
-            if not model.timerPaused then
+            if model.timerRunning then
                 ( { model | timer = model.timer + 1 }
                 , Cmd.none
                 )
@@ -52,6 +56,21 @@ update msg model =
                 ( model
                 , Cmd.none
                 )
+
+        ResetTimer ->
+            ( { model | timer = 0 }
+            , Cmd.none
+            )
+
+        StopTimer ->
+            ( { model | timerRunning = False }
+            , Cmd.none
+            )
+
+        StartTimer ->
+            ( { model | timerRunning = True }
+            , Cmd.none
+            )
 
 
 
@@ -70,4 +89,18 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] [ text (String.fromInt model.timer) ] ]
+        [ div [] [ text (String.fromInt model.timer) ]
+        , div []
+            [ button [ onClick ResetTimer ] [ text "Reset" ]
+            , viewTimerControl model
+            ]
+        ]
+
+
+viewTimerControl : Model -> Html Msg
+viewTimerControl model =
+    if model.timerRunning then
+        button [ onClick StopTimer ] [ text "Pause" ]
+
+    else
+        button [ onClick StartTimer ] [ text "Play" ]
