@@ -25,12 +25,13 @@ type alias Model =
     { timerRunning : Bool
     , timer : Int
     , phrase : String
+    , phraseTiming : Int
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model False 0 ""
+    ( Model False 0 "" 0
     , Cmd.none
     )
 
@@ -48,6 +49,7 @@ type Msg
     | StopTimer
     | StartTimer
     | PhraseChanged String
+    | PhraseTimingChanged String
     | SpeakPhrase
 
 
@@ -56,9 +58,15 @@ update msg model =
     case msg of
         Tick _ ->
             if model.timerRunning then
-                ( { model | timer = model.timer + 1 }
-                , Cmd.none
-                )
+                if model.timer == model.phraseTiming then
+                    ( { model | timer = model.timer + 1 }
+                    , textToSpeechQueue (Json.Encode.string model.phrase)
+                    )
+
+                else
+                    ( { model | timer = model.timer + 1 }
+                    , Cmd.none
+                    )
 
             else
                 ( model
@@ -82,6 +90,11 @@ update msg model =
 
         PhraseChanged newPhrase ->
             ( { model | phrase = newPhrase }
+            , Cmd.none
+            )
+
+        PhraseTimingChanged newTiming ->
+            ( { model | phraseTiming = Maybe.withDefault 0 (String.toInt newTiming) }
             , Cmd.none
             )
 
@@ -113,7 +126,8 @@ view model =
             , viewTimerControl model
             ]
         , div []
-            [ input [ type_ "text", placeholder "Enter phrase", value model.phrase, onInput PhraseChanged ] []
+            [ input [ type_ "number", placeholder "Enter timing", value (String.fromInt model.phraseTiming), onInput PhraseTimingChanged ] []
+            , input [ type_ "text", placeholder "Enter phrase", value model.phrase, onInput PhraseChanged ] []
             , button [ onClick SpeakPhrase ] [ text "Speak" ]
             ]
         ]
