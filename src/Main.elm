@@ -1,8 +1,10 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
-import Html exposing (Html, button, div, text)
-import Html.Events exposing (onClick)
+import Html exposing (Html, button, div, input, text)
+import Html.Attributes exposing (placeholder, type_, value)
+import Html.Events exposing (onClick, onInput)
+import Json.Encode
 import Time
 
 
@@ -22,14 +24,18 @@ main =
 type alias Model =
     { timerRunning : Bool
     , timer : Int
+    , phrase : String
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model False 0
+    ( Model False 0 ""
     , Cmd.none
     )
+
+
+port textToSpeechQueue : Json.Encode.Value -> Cmd msg
 
 
 
@@ -41,6 +47,8 @@ type Msg
     | ResetTimer
     | StopTimer
     | StartTimer
+    | PhraseChanged String
+    | SpeakPhrase
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -72,6 +80,16 @@ update msg model =
             , Cmd.none
             )
 
+        PhraseChanged newPhrase ->
+            ( { model | phrase = newPhrase }
+            , Cmd.none
+            )
+
+        SpeakPhrase ->
+            ( model
+            , textToSpeechQueue (Json.Encode.string model.phrase)
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -93,6 +111,10 @@ view model =
         , div []
             [ button [ onClick ResetTimer ] [ text "Reset" ]
             , viewTimerControl model
+            ]
+        , div []
+            [ input [ type_ "text", placeholder "Enter phrase", value model.phrase, onInput PhraseChanged ] []
+            , button [ onClick SpeakPhrase ] [ text "Speak" ]
             ]
         ]
 
