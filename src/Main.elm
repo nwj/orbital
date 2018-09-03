@@ -1,6 +1,7 @@
 port module Main exposing (main)
 
 import Browser
+import Dict exposing (Dict)
 import Html exposing (Html, button, div, input, text)
 import Html.Attributes exposing (placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
@@ -24,14 +25,15 @@ main =
 type alias Model =
     { timerRunning : Bool
     , timer : Int
-    , phrase : String
-    , phraseTiming : Int
+    , timingDict : Dict Int String
+    , newTiming : Int
+    , newTimingPhrase : String
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model False 0 "" 0
+    ( Model False 0 Dict.empty 0 ""
     , Cmd.none
     )
 
@@ -48,9 +50,9 @@ type Msg
     | ResetTimer
     | StopTimer
     | StartTimer
-    | PhraseChanged String
-    | PhraseTimingChanged String
-    | SpeakPhrase
+    | NewTiming String
+    | NewTimingPhrase String
+    | AddNewTiming
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -58,9 +60,9 @@ update msg model =
     case msg of
         Tick _ ->
             if model.timerRunning then
-                if model.timer == model.phraseTiming then
+                if Dict.member model.timer model.timingDict then
                     ( { model | timer = model.timer + 1 }
-                    , textToSpeechQueue (Json.Encode.string model.phrase)
+                    , textToSpeechQueue (Json.Encode.string (Maybe.withDefault "" (Dict.get model.timer model.timingDict)))
                     )
 
                 else
@@ -88,19 +90,19 @@ update msg model =
             , Cmd.none
             )
 
-        PhraseChanged newPhrase ->
-            ( { model | phrase = newPhrase }
+        NewTiming timing ->
+            ( { model | newTiming = Maybe.withDefault 0 (String.toInt timing) }
             , Cmd.none
             )
 
-        PhraseTimingChanged newTiming ->
-            ( { model | phraseTiming = Maybe.withDefault 0 (String.toInt newTiming) }
+        NewTimingPhrase phrase ->
+            ( { model | newTimingPhrase = phrase }
             , Cmd.none
             )
 
-        SpeakPhrase ->
-            ( model
-            , textToSpeechQueue (Json.Encode.string model.phrase)
+        AddNewTiming ->
+            ( { model | timingDict = Dict.insert model.newTiming model.newTimingPhrase model.timingDict }
+            , Cmd.none
             )
 
 
@@ -125,10 +127,11 @@ view model =
             [ button [ onClick ResetTimer ] [ text "Reset" ]
             , viewTimerControl model
             ]
+        , div [] (viewTimings model)
         , div []
-            [ input [ type_ "number", placeholder "Enter timing", value (String.fromInt model.phraseTiming), onInput PhraseTimingChanged ] []
-            , input [ type_ "text", placeholder "Enter phrase", value model.phrase, onInput PhraseChanged ] []
-            , button [ onClick SpeakPhrase ] [ text "Speak" ]
+            [ input [ type_ "number", placeholder "Enter timing", value (String.fromInt model.newTiming), onInput NewTiming ] []
+            , input [ type_ "text", placeholder "Enter phrase", value model.newTimingPhrase, onInput NewTimingPhrase ] []
+            , button [ onClick AddNewTiming ] [ text "Add" ]
             ]
         ]
 
@@ -140,6 +143,22 @@ viewTimerControl model =
 
     else
         button [ onClick StartTimer ] [ text "Play" ]
+
+
+viewTimings : Model -> List (Html msg)
+viewTimings model =
+    let
+        timingsList =
+            Dict.toList model.timingDict
+
+        timingToText t =
+            secondsToClockString (Tuple.first t) ++ " " ++ Tuple.second t
+
+        viewTiming t =
+            div []
+                [ text (timingToText t) ]
+    in
+    List.map viewTiming timingsList
 
 
 secondsToClockString : Int -> String
