@@ -56,6 +56,7 @@ type Msg
     | NewTiming String
     | NewTimingPhrase String
     | AddNewTiming
+    | RemoveTiming Timing
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -108,6 +109,11 @@ update msg model =
             , Cmd.none
             )
 
+        RemoveTiming timing ->
+            ( { model | timings = (List.filter (\t -> not (t.timing == timing.timing) || not (t.timingPhrase == timing.timingPhrase)) model.timings)}
+            , Cmd.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -148,17 +154,19 @@ viewTimerControl model =
         button [ onClick StartTimer ] [ text "Play" ]
 
 
-viewTimings : Model -> List (Html msg)
+viewTimings : Model -> List (Html Msg)
 viewTimings model =
     let
         timingToText : Timing -> String
         timingToText t =
             secondsToClockString t.timing ++ " " ++ t.timingPhrase
 
-        viewTiming : Timing -> Html msg
+        viewTiming : Timing -> Html Msg
         viewTiming t =
             div []
-                [ text (timingToText t) ]
+                [ div [] [text (timingToText t)]
+                , button [onClick (RemoveTiming t)] [ text "X" ]
+                ]
     in
     List.map viewTiming (List.sortBy .timing model.timings)
 
