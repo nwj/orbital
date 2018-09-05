@@ -39,10 +39,13 @@ init _ =
 
 port textToSpeechQueue : Json.Encode.Value -> Cmd msg
 
+
 type alias Timing =
-    { timing : Int
+    { id : Int
+    , timing : Int
     , timingPhrase : String
     }
+
 
 
 -- UPDATE
@@ -105,14 +108,19 @@ update msg model =
             )
 
         AddNewTiming ->
-            ( { model | timings = (Timing model.newTiming model.newTimingPhrase) :: model.timings }
+            ( { model | timings = Timing (nextTimingId model) model.newTiming model.newTimingPhrase :: model.timings }
             , Cmd.none
             )
 
         RemoveTiming timing ->
-            ( { model | timings = (List.filter (\t -> not (t.timing == timing.timing) || not (t.timingPhrase == timing.timingPhrase)) model.timings)}
+            ( { model | timings = List.filter (\t -> not (t.id == timing.id)) model.timings }
             , Cmd.none
             )
+
+
+nextTimingId : Model -> Int
+nextTimingId model =
+    Maybe.withDefault -1 (List.maximum (List.map .id model.timings)) + 1
 
 
 
@@ -164,8 +172,8 @@ viewTimings model =
         viewTiming : Timing -> Html Msg
         viewTiming t =
             div []
-                [ div [] [text (timingToText t)]
-                , button [onClick (RemoveTiming t)] [ text "X" ]
+                [ div [] [ text (timingToText t) ]
+                , button [ onClick (RemoveTiming t) ] [ text "X" ]
                 ]
     in
     List.map viewTiming (List.sortBy .timing model.timings)
