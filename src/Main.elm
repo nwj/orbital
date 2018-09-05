@@ -8,6 +8,16 @@ import Json.Encode
 import Time
 
 
+
+-- TODO (nwj) Break out build, timing, clock modules
+-- TODO (nwj) Write the javascript side of the textToSpeechQueue port
+-- TODO (nwj) Add a NoOp event and only fire Tick events when the clock is running
+-- TODO (nwj) Consider generating timing ids off of a random seed passed in as a flag
+-- TODO (nwj) Add ability to store multiple builds in memory
+-- TODO (nwj) Add ability to export or import a build
+-- TODO (nwj) Add caching of builds backed by localStorage
+
+
 main =
     Browser.element
         { init = init
