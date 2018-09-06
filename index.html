@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Orbital Command</title>
+  <script src="main.js"></script>
+</head>
+<body>
+  <div id="elm"></div>
+  <script>
+    var app = Elm.Main.init({ node: document.getElementById("elm") });
+
+    app.ports.textToSpeechQueue.subscribe(function(data) {
+      data.forEach(function(phrase) {
+	var speechSynthesizer = window.speechSynthesis;
+	utterance = new SpeechSynthesisUtterance(phrase);
+	speechSynthesizer.speak(utterance);
+      });
+    });
+  </script>
+</body>
+</html>
