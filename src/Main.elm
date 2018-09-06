@@ -32,7 +32,7 @@ main =
 type alias Model =
     { timerRunning : Bool
     , timer : Int
-    , timings : List Timing
+    , currentBuild : Build
     , newTiming : Int
     , newTimingPhrase : String
     , idSeed : Random.Seed
@@ -41,7 +41,7 @@ type alias Model =
 
 init : Int -> ( Model, Cmd Msg )
 init flags =
-    ( Model False 0 [] 0 "" (Random.initialSeed flags)
+    ( Model False 0 (Build -1 "" []) 0 "" (Random.initialSeed flags)
     , Cmd.none
     )
 
@@ -53,6 +53,13 @@ type alias Timing =
     { id : Int
     , timing : Int
     , timingPhrase : String
+    }
+
+
+type alias Build =
+    { id : Int
+    , name : String
+    , timings : List Timing
     }
 
 
@@ -81,9 +88,9 @@ update msg model =
     case msg of
         Tick _ ->
             if model.timerRunning then
-                if List.any (\t -> t.timing == model.timer) model.timings then
+                if List.any (\t -> t.timing == model.timer) model.currentBuild.timings then
                     ( { model | timer = model.timer + 1 }
-                    , textToSpeechQueue (Json.Encode.list (\t -> Json.Encode.string t) (List.map .timingPhrase (List.filter (\t -> t.timing == model.timer) model.timings)))
+                    , textToSpeechQueue (Json.Encode.list (\t -> Json.Encode.string t) (List.map .timingPhrase (List.filter (\t -> t.timing == model.timer) model.currentBuild.timings)))
                     )
 
                 else
@@ -127,14 +134,14 @@ update msg model =
                     Random.step anyPositiveInt model.idSeed
             in
             ( { model
-                | timings = Timing newId model.newTiming model.newTimingPhrase :: model.timings
+                | currentBuild = Build model.currentBuild.id model.currentBuild.name (Timing newId model.newTiming model.newTimingPhrase :: model.currentBuild.timings)
                 , idSeed = newSeed
               }
             , Cmd.none
             )
 
         RemoveTiming timing ->
-            ( { model | timings = List.filter (\t -> not (t.id == timing.id)) model.timings }
+            ( { model | currentBuild = Build model.currentBuild.id model.currentBuild.name (List.filter (\t -> not (t.id == timing.id)) model.currentBuild.timings) }
             , Cmd.none
             )
 
@@ -192,7 +199,7 @@ viewTimings model =
                 , button [ onClick (RemoveTiming t) ] [ text "X" ]
                 ]
     in
-    List.map viewTiming (List.sortBy .timing model.timings)
+    List.map viewTiming (List.sortBy .timing model.currentBuild.timings)
 
 
 secondsToClockString : Int -> String
