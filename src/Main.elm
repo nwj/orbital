@@ -1,16 +1,18 @@
 port module Main exposing (main)
 
 import Browser
+import Build exposing (Build)
 import Html exposing (Html, button, div, input, text)
 import Html.Attributes exposing (placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Encode
 import Random
+import Stopwatch exposing (Stopwatch)
 import Time
+import Timing exposing (Timing)
 
 
 
--- TODO (nwj) Break out build, timing, clock modules
 -- TODO (nwj) Add ability to store multiple builds in memory
 -- TODO (nwj) Add ability to export or import a build
 -- TODO (nwj) Add caching of builds backed by localStorage
@@ -30,8 +32,7 @@ main =
 
 
 type alias Model =
-    { timerRunning : Bool
-    , timer : Int
+    { stopwatch : Stopwatch
     , currentBuild : Build
     , newTiming : Int
     , newTimingPhrase : String
@@ -41,26 +42,12 @@ type alias Model =
 
 init : Int -> ( Model, Cmd Msg )
 init flags =
-    ( Model False 0 (Build -1 "" []) 0 "" (Random.initialSeed flags)
+    ( Model Stopwatch.init Build.init 0 "" (Random.initialSeed flags)
     , Cmd.none
     )
 
 
 port textToSpeechQueue : Json.Encode.Value -> Cmd msg
-
-
-type alias Timing =
-    { id : Int
-    , timing : Int
-    , timingPhrase : String
-    }
-
-
-type alias Build =
-    { id : Int
-    , name : String
-    , timings : List Timing
-    }
 
 
 anyPositiveInt : Random.Generator Int
@@ -74,12 +61,11 @@ anyPositiveInt =
 
 type Msg
     = Tick Time.Posix
-    | ResetTimer
-    | StopTimer
-    | StartTimer
-    | NewTiming String
-    | NewTimingPhrase String
-    | AddNewTiming
+    | ResetStopwatch
+    | ToggleStopwatch
+    | NewTime String
+    | NewPhrase String
+    | AddTiming
     | RemoveTiming Timing
 
 
@@ -87,14 +73,14 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick _ ->
-            if model.timerRunning then
-                if List.any (\t -> t.timing == model.timer) model.currentBuild.timings then
-                    ( { model | timer = model.timer + 1 }
-                    , textToSpeechQueue (Json.Encode.list (\t -> Json.Encode.string t) (List.map .timingPhrase (List.filter (\t -> t.timing == model.timer) model.currentBuild.timings)))
+            if Stopwatch.isPlaying model.stopwatch then
+                if Build.anyTimingsByTime model.stopwatch.time model.currentBuild then
+                    ( { model | stopwatch = Stopwatch.tick model.stopwatch }
+                    , textToSpeechQueue (Json.Encode.list (\t -> Json.Encode.string t) (List.map .phrase (Build.timingsByTime model.stopwatch.time model.currentBuild)))
                     )
 
                 else
-                    ( { model | timer = model.timer + 1 }
+                    ( { model | stopwatch = Stopwatch.tick model.stopwatch }
                     , Cmd.none
                     )
 
@@ -103,45 +89,43 @@ update msg model =
                 , Cmd.none
                 )
 
-        ResetTimer ->
-            ( { model | timer = 0 }
+        ResetStopwatch ->
+            ( { model | stopwatch = Stopwatch.init }
             , Cmd.none
             )
 
-        StopTimer ->
-            ( { model | timerRunning = False }
+        ToggleStopwatch ->
+            ( { model | stopwatch = Stopwatch.toggle model.stopwatch }
             , Cmd.none
             )
 
-        StartTimer ->
-            ( { model | timerRunning = True }
-            , Cmd.none
-            )
-
-        NewTiming timing ->
+        NewTime timing ->
             ( { model | newTiming = Maybe.withDefault 0 (String.toInt timing) }
             , Cmd.none
             )
 
-        NewTimingPhrase phrase ->
+        NewPhrase phrase ->
             ( { model | newTimingPhrase = phrase }
             , Cmd.none
             )
 
-        AddNewTiming ->
+        AddTiming ->
             let
                 ( newId, newSeed ) =
                     Random.step anyPositiveInt model.idSeed
+
+                newTiming =
+                    Timing newId model.newTiming model.newTimingPhrase
             in
             ( { model
-                | currentBuild = Build model.currentBuild.id model.currentBuild.name (Timing newId model.newTiming model.newTimingPhrase :: model.currentBuild.timings)
+                | currentBuild = Build.addTiming newTiming model.currentBuild
                 , idSeed = newSeed
               }
             , Cmd.none
             )
 
         RemoveTiming timing ->
-            ( { model | currentBuild = Build model.currentBuild.id model.currentBuild.name (List.filter (\t -> not (t.id == timing.id)) model.currentBuild.timings) }
+            ( { model | currentBuild = Build.removeTiming timing model.currentBuild }
             , Cmd.none
             )
 
@@ -162,27 +146,27 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] [ text (secondsToClockString model.timer) ]
+        [ div [] [ text (secondsToClockString model.stopwatch.time) ]
         , div []
-            [ button [ onClick ResetTimer ] [ text "Reset" ]
+            [ button [ onClick ResetStopwatch ] [ text "Reset" ]
             , viewTimerControl model
             ]
         , div [] (viewTimings model)
         , div []
-            [ input [ type_ "number", placeholder "Enter timing", value (String.fromInt model.newTiming), onInput NewTiming ] []
-            , input [ type_ "text", placeholder "Enter phrase", value model.newTimingPhrase, onInput NewTimingPhrase ] []
-            , button [ onClick AddNewTiming ] [ text "Add" ]
+            [ input [ type_ "number", placeholder "Enter timing", value (String.fromInt model.newTiming), onInput NewTime ] []
+            , input [ type_ "text", placeholder "Enter phrase", value model.newTimingPhrase, onInput NewPhrase ] []
+            , button [ onClick AddTiming ] [ text "Add" ]
             ]
         ]
 
 
 viewTimerControl : Model -> Html Msg
 viewTimerControl model =
-    if model.timerRunning then
-        button [ onClick StopTimer ] [ text "Pause" ]
+    if Stopwatch.isPaused model.stopwatch then
+        button [ onClick ToggleStopwatch ] [ text "Pause" ]
 
     else
-        button [ onClick StartTimer ] [ text "Play" ]
+        button [ onClick ToggleStopwatch ] [ text "Play" ]
 
 
 viewTimings : Model -> List (Html Msg)
@@ -190,7 +174,7 @@ viewTimings model =
     let
         timingToText : Timing -> String
         timingToText t =
-            secondsToClockString t.timing ++ " " ++ t.timingPhrase
+            secondsToClockString t.time ++ " " ++ t.phrase
 
         viewTiming : Timing -> Html Msg
         viewTiming t =
@@ -199,7 +183,7 @@ viewTimings model =
                 , button [ onClick (RemoveTiming t) ] [ text "X" ]
                 ]
     in
-    List.map viewTiming (List.sortBy .timing model.currentBuild.timings)
+    List.map viewTiming (List.sortBy .time model.currentBuild.timings)
 
 
 secondsToClockString : Int -> String
