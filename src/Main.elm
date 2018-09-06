@@ -5,12 +5,12 @@ import Html exposing (Html, button, div, input, text)
 import Html.Attributes exposing (placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Encode
+import Random
 import Time
 
 
 
 -- TODO (nwj) Break out build, timing, clock modules
--- TODO (nwj) Consider generating timing ids off of a random seed passed in as a flag
 -- TODO (nwj) Add ability to store multiple builds in memory
 -- TODO (nwj) Add ability to export or import a build
 -- TODO (nwj) Add caching of builds backed by localStorage
@@ -35,12 +35,13 @@ type alias Model =
     , timings : List Timing
     , newTiming : Int
     , newTimingPhrase : String
+    , idSeed : Random.Seed
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( Model False 0 [] 0 ""
+init : Int -> ( Model, Cmd Msg )
+init flags =
+    ( Model False 0 [] 0 "" (Random.initialSeed flags)
     , Cmd.none
     )
 
@@ -53,6 +54,11 @@ type alias Timing =
     , timing : Int
     , timingPhrase : String
     }
+
+
+anyPositiveInt : Random.Generator Int
+anyPositiveInt =
+    Random.int 0 Random.maxInt
 
 
 
@@ -116,7 +122,14 @@ update msg model =
             )
 
         AddNewTiming ->
-            ( { model | timings = Timing (nextTimingId model) model.newTiming model.newTimingPhrase :: model.timings }
+            let
+                ( newId, newSeed ) =
+                    Random.step anyPositiveInt model.idSeed
+            in
+            ( { model
+                | timings = Timing newId model.newTiming model.newTimingPhrase :: model.timings
+                , idSeed = newSeed
+              }
             , Cmd.none
             )
 
@@ -124,11 +137,6 @@ update msg model =
             ( { model | timings = List.filter (\t -> not (t.id == timing.id)) model.timings }
             , Cmd.none
             )
-
-
-nextTimingId : Model -> Int
-nextTimingId model =
-    Maybe.withDefault -1 (List.maximum (List.map .id model.timings)) + 1
 
 
 
