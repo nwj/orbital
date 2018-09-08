@@ -2,11 +2,15 @@ module Build exposing
     ( Build
     , addTiming
     , anyTimingsByTime
+    , decodeBuild
+    , encodeBuild
     , init
     , removeTiming
     , timingsByTime
     )
 
+import Json.Decode exposing (field)
+import Json.Encode
 import Timing exposing (Timing)
 
 
@@ -52,3 +56,24 @@ anyTimingsByTime time build =
 timingsByTime : Int -> Build -> List Timing
 timingsByTime time build =
     Timing.timingsByTime time build.timings
+
+
+
+-- JSON
+
+
+decodeBuild : Json.Decode.Decoder Build
+decodeBuild =
+    Json.Decode.map3 Build
+        (field "id" Json.Decode.int)
+        (field "name" Json.Decode.string)
+        (field "timings" <| Json.Decode.list Timing.decodeTiming)
+
+
+encodeBuild : Build -> Json.Encode.Value
+encodeBuild build =
+    Json.Encode.object
+        [ ( "id", Json.Encode.int <| build.id )
+        , ( "name", Json.Encode.string <| build.name )
+        , ( "timings", Json.Encode.list Timing.encodeTiming build.timings )
+        ]

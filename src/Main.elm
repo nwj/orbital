@@ -6,6 +6,7 @@ import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, input, text)
 import Html.Attributes exposing (placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
+import Json.Decode exposing (field)
 import Json.Encode
 import Random
 import Stopwatch exposing (Stopwatch)
@@ -14,10 +15,10 @@ import Timing exposing (Timing)
 
 
 
--- TODO (nwj) Add ability to export or import a build
--- TODO (nwj) Add caching of builds backed by localStorage
 -- TODO (nwj) Add variable clock speeds
--- TODO (nwj) JSON encode/decode flags
+-- TODO (nwj) Add build duplication
+-- TODO (nwj) Add build removal
+-- TODO (nwj) Add ability to export or import a build
 
 
 main =
@@ -43,16 +44,22 @@ type alias Model =
     }
 
 
-init : Int -> ( Model, Cmd Msg )
+init : Json.Decode.Value -> ( Model, Cmd Msg )
 init flags =
     let
-        initialSeed =
-            Random.initialSeed flags
+        decodedFlags =
+            decodeFlags flags
 
-        ( id, nextSeed ) =
-            Random.step anyPositiveInt initialSeed
+        ( newBuildId, newSeed ) =
+            Random.step anyPositiveInt <| Random.initialSeed decodedFlags.seedInt
+
+        storedBuilds =
+            List.foldr
+                (\b d -> Dict.insert b.id b d)
+                Dict.empty
+                decodedFlags.storedBuilds
     in
-    ( Model Stopwatch.init (Build.init id) Dict.empty 0 "" nextSeed
+    ( Model Stopwatch.init (Build.init newBuildId) storedBuilds 0 "" newSeed
     , Cmd.none
     )
 
@@ -60,9 +67,35 @@ init flags =
 port textToSpeechQueue : Json.Encode.Value -> Cmd msg
 
 
+port buildsToStore : Json.Encode.Value -> Cmd msg
+
+
 anyPositiveInt : Random.Generator Int
 anyPositiveInt =
     Random.int 0 Random.maxInt
+
+
+type alias Flags =
+    { seedInt : Int
+    , storedBuilds : List Build
+    }
+
+
+flagsDecoder : Json.Decode.Decoder Flags
+flagsDecoder =
+    Json.Decode.map2 Flags
+        (field "seedInt" Json.Decode.int)
+        (field "storedBuilds" <| Json.Decode.list Build.decodeBuild)
+
+
+decodeFlags : Json.Decode.Value -> Flags
+decodeFlags encodedFlags =
+    case Json.Decode.decodeValue flagsDecoder encodedFlags of
+        Ok flags ->
+            flags
+
+        Err e ->
+            Flags -1 []
 
 
 
@@ -77,7 +110,7 @@ type Msg
     | NewPhrase String
     | AddTiming
     | RemoveTiming Timing
-    | SaveBuild
+    | StoreBuild
     | NewBuild
     | SelectBuild Build
     | NameBuild String
@@ -90,7 +123,7 @@ update msg model =
             if Stopwatch.isPlaying model.stopwatch then
                 if Build.anyTimingsByTime model.stopwatch.time model.currentBuild then
                     ( { model | stopwatch = Stopwatch.tick model.stopwatch }
-                    , textToSpeechQueue (Json.Encode.list (\t -> Json.Encode.string t) (List.map .phrase (Build.timingsByTime model.stopwatch.time model.currentBuild)))
+                    , textToSpeechQueue (Json.Encode.list Json.Encode.string (List.map .phrase (Build.timingsByTime model.stopwatch.time model.currentBuild)))
                     )
 
                 else
@@ -143,9 +176,13 @@ update msg model =
             , Cmd.none
             )
 
-        SaveBuild ->
-            ( { model | builds = Dict.insert model.currentBuild.id model.currentBuild model.builds }
-            , Cmd.none
+        StoreBuild ->
+            let
+                updatedBuilds =
+                    Dict.insert model.currentBuild.id model.currentBuild model.builds
+            in
+            ( { model | builds = updatedBuilds }
+            , buildsToStore <| Json.Encode.list Build.encodeBuild <| Dict.values updatedBuilds
             )
 
         NewBuild ->
@@ -206,7 +243,7 @@ view model =
         , div [] (viewTimings model)
         , div []
             [ input [ type_ "text", placeholder "Name your build", value model.currentBuild.name, onInput NameBuild ] []
-            , button [ onClick SaveBuild ] [ text "Save Build" ]
+            , button [ onClick StoreBuild ] [ text "Save Build" ]
             , button [ onClick NewBuild ] [ text "New Build" ]
             ]
         , div []
