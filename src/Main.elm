@@ -2,7 +2,8 @@ port module Main exposing (main)
 
 import Browser
 import Build exposing (Build)
-import Html exposing (Html, button, div, input, text)
+import Dict exposing (Dict)
+import Html exposing (Html, a, button, div, input, text)
 import Html.Attributes exposing (placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Encode
@@ -13,9 +14,10 @@ import Timing exposing (Timing)
 
 
 
--- TODO (nwj) Add ability to store multiple builds in memory
 -- TODO (nwj) Add ability to export or import a build
 -- TODO (nwj) Add caching of builds backed by localStorage
+-- TODO (nwj) Add variable clock speeds
+-- TODO (nwj) JSON encode/decode flags
 
 
 main =
@@ -34,6 +36,7 @@ main =
 type alias Model =
     { stopwatch : Stopwatch
     , currentBuild : Build
+    , builds : Dict Int Build
     , newTiming : Int
     , newTimingPhrase : String
     , idSeed : Random.Seed
@@ -42,7 +45,14 @@ type alias Model =
 
 init : Int -> ( Model, Cmd Msg )
 init flags =
-    ( Model Stopwatch.init Build.init 0 "" (Random.initialSeed flags)
+    let
+        initialSeed =
+            Random.initialSeed flags
+
+        ( id, nextSeed ) =
+            Random.step anyPositiveInt initialSeed
+    in
+    ( Model Stopwatch.init (Build.init id) Dict.empty 0 "" nextSeed
     , Cmd.none
     )
 
@@ -67,6 +77,10 @@ type Msg
     | NewPhrase String
     | AddTiming
     | RemoveTiming Timing
+    | SaveBuild
+    | NewBuild
+    | SelectBuild Build
+    | NameBuild String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -129,6 +143,37 @@ update msg model =
             , Cmd.none
             )
 
+        SaveBuild ->
+            ( { model | builds = Dict.insert model.currentBuild.id model.currentBuild model.builds }
+            , Cmd.none
+            )
+
+        NewBuild ->
+            let
+                ( newId, newSeed ) =
+                    Random.step anyPositiveInt model.idSeed
+            in
+            ( { model | currentBuild = Build.init newId, idSeed = newSeed }
+            , Cmd.none
+            )
+
+        SelectBuild build ->
+            ( { model | currentBuild = build }
+            , Cmd.none
+            )
+
+        NameBuild newName ->
+            let
+                currentBuild =
+                    model.currentBuild
+
+                newBuild =
+                    { currentBuild | name = newName }
+            in
+            ( { model | currentBuild = newBuild }
+            , Cmd.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -151,11 +196,23 @@ view model =
             [ button [ onClick ResetStopwatch ] [ text "Reset" ]
             , viewTimerControl model
             ]
+        , div []
+            [ div []
+                (List.map
+                    (\b -> a [ onClick (SelectBuild b) ] [ text b.name ])
+                    (Dict.values model.builds)
+                )
+            ]
         , div [] (viewTimings model)
+        , div []
+            [ input [ type_ "text", placeholder "Name your build", value model.currentBuild.name, onInput NameBuild ] []
+            , button [ onClick SaveBuild ] [ text "Save Build" ]
+            , button [ onClick NewBuild ] [ text "New Build" ]
+            ]
         , div []
             [ input [ type_ "number", placeholder "Enter timing", value (String.fromInt model.newTiming), onInput NewTime ] []
             , input [ type_ "text", placeholder "Enter phrase", value model.newTimingPhrase, onInput NewPhrase ] []
-            , button [ onClick AddTiming ] [ text "Add" ]
+            , button [ onClick AddTiming ] [ text "Add Timing" ]
             ]
         ]
 

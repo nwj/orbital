@@ -1,4 +1,11 @@
-module Build exposing (Build, addTiming, anyTimingsByTime, init, removeTiming, timingsByTime)
+module Build exposing
+    ( Build
+    , addTiming
+    , anyTimingsByTime
+    , init
+    , removeTiming
+    , timingsByTime
+    )
 
 import Timing exposing (Timing)
 
@@ -14,9 +21,9 @@ type alias Build =
     }
 
 
-init : Build
-init =
-    Build -1 "" []
+init : Int -> Build
+init id =
+    Build id "" []
 
 
 

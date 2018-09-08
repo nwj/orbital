@@ -1,4 +1,8 @@
-module Timing exposing (Timing, anyTimingsByTime, timingsByTime)
+module Timing exposing
+    ( Timing
+    , anyTimingsByTime
+    , timingsByTime
+    )
 
 -- TIMING
 
