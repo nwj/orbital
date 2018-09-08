@@ -15,7 +15,6 @@ import Timing exposing (Timing)
 
 
 
--- TODO (nwj) Add build removal
 -- TODO (nwj) Add build duplication
 -- TODO (nwj) Add ability to export or import a build
 
@@ -118,6 +117,7 @@ type Msg
     | AddTiming
     | RemoveTiming Timing
     | StoreBuild
+    | RemoveBuild Build
     | NewBuild
     | SelectBuild Build
     | NameBuild String
@@ -192,6 +192,15 @@ update msg model =
             , buildsToStore <| Json.Encode.list Build.encodeBuild <| Dict.values updatedBuilds
             )
 
+        RemoveBuild build ->
+            let
+                updatedBuilds =
+                    Dict.remove build.id model.builds
+            in
+            ( { model | builds = updatedBuilds }
+            , buildsToStore <| Json.Encode.list Build.encodeBuild <| Dict.values updatedBuilds
+            )
+
         NewBuild ->
             let
                 ( newId, newSeed ) =
@@ -243,7 +252,7 @@ view model =
         , div []
             [ div []
                 (List.map
-                    (\b -> a [ onClick (SelectBuild b) ] [ text b.name ])
+                    (\b -> div [] [ a [ onClick (SelectBuild b) ] [ text b.name ], button [ onClick <| RemoveBuild b ] [ text "X" ] ])
                     (Dict.values model.builds)
                 )
             ]
