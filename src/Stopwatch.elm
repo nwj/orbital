@@ -1,4 +1,13 @@
-module Stopwatch exposing (Stopwatch, init, isPaused, isPlaying, pause, play, tick, toggle)
+module Stopwatch exposing
+    ( Stopwatch
+    , init
+    , isPaused
+    , isPlaying
+    , pause
+    , play
+    , tick
+    , toggle
+    )
 
 -- STOPWATCH
 

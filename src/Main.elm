@@ -15,9 +15,8 @@ import Timing exposing (Timing)
 
 
 
--- TODO (nwj) Add variable clock speeds
--- TODO (nwj) Add build duplication
 -- TODO (nwj) Add build removal
+-- TODO (nwj) Add build duplication
 -- TODO (nwj) Add ability to export or import a build
 
 
@@ -64,15 +63,23 @@ init flags =
     )
 
 
+anyPositiveInt : Random.Generator Int
+anyPositiveInt =
+    Random.int 0 Random.maxInt
+
+
+
+-- PORTS
+
+
 port textToSpeechQueue : Json.Encode.Value -> Cmd msg
 
 
 port buildsToStore : Json.Encode.Value -> Cmd msg
 
 
-anyPositiveInt : Random.Generator Int
-anyPositiveInt =
-    Random.int 0 Random.maxInt
+
+-- FLAGS
 
 
 type alias Flags =
@@ -257,10 +264,10 @@ view model =
 viewTimerControl : Model -> Html Msg
 viewTimerControl model =
     if Stopwatch.isPaused model.stopwatch then
-        button [ onClick ToggleStopwatch ] [ text "Pause" ]
+        button [ onClick ToggleStopwatch ] [ text "Play" ]
 
     else
-        button [ onClick ToggleStopwatch ] [ text "Play" ]
+        button [ onClick ToggleStopwatch ] [ text "Pause" ]
 
 
 viewTimings : Model -> List (Html Msg)
