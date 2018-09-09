@@ -3,8 +3,9 @@ port module Main exposing (main)
 import Browser
 import Build exposing (Build)
 import Dict exposing (Dict)
+import FeatherIcons
 import Html exposing (Html, a, button, div, input, text)
-import Html.Attributes exposing (placeholder, type_, value)
+import Html.Attributes exposing (class, classList, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode exposing (field)
 import Json.Encode
@@ -244,11 +245,8 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [] [ text (secondsToClockString model.stopwatch.time) ]
-        , div []
-            [ button [ onClick ResetStopwatch ] [ text "Reset" ]
-            , viewTimerControl model
-            ]
+        [ viewHeader
+        , viewStopwatch model.stopwatch
         , div []
             [ div []
                 (List.map
@@ -270,13 +268,48 @@ view model =
         ]
 
 
-viewTimerControl : Model -> Html Msg
-viewTimerControl model =
-    if Stopwatch.isPaused model.stopwatch then
-        button [ onClick ToggleStopwatch ] [ text "Play" ]
+viewHeader : Html Msg
+viewHeader =
+    div [ class "header" ] [ div [ class "logo" ] [ text "ORBITAL" ] ]
+
+
+viewStopwatch : Stopwatch -> Html Msg
+viewStopwatch stopwatch =
+    div [ class "stopwatch" ]
+        [ button
+            [ classList
+                [ ( "stopwatch__reset", True )
+                , ( "stopwatch__reset--disabled", stopwatch.time == 0 && Stopwatch.isPaused stopwatch )
+                ]
+            , onClick ResetStopwatch
+            ]
+            [ FeatherIcons.rotateCcw ]
+        , button
+            [ classList
+                [ ( "stopwatch__toggle", True )
+                , ( "stopwatch__toggle--play", Stopwatch.isPaused stopwatch )
+                , ( "stopwatch__toggle--pause", Stopwatch.isPlaying stopwatch )
+                ]
+            , onClick ToggleStopwatch
+            ]
+            [ viewStopwatchToggleButtonIcon stopwatch ]
+        , div
+            [ classList
+                [ ( "stopwatch__clock", True )
+                , ( "stopwatch__clock--hidden", stopwatch.time == 0 && Stopwatch.isPaused stopwatch )
+                ]
+            ]
+            [ text <| Stopwatch.toClockString stopwatch ]
+        ]
+
+
+viewStopwatchToggleButtonIcon : Stopwatch -> Html msg
+viewStopwatchToggleButtonIcon stopwatch =
+    if Stopwatch.isPaused stopwatch then
+        FeatherIcons.play
 
     else
-        button [ onClick ToggleStopwatch ] [ text "Pause" ]
+        FeatherIcons.pause
 
 
 viewTimings : Model -> List (Html Msg)

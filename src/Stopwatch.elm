@@ -6,6 +6,7 @@ module Stopwatch exposing
     , pause
     , play
     , tick
+    , toClockString
     , toggle
     )
 
@@ -68,3 +69,40 @@ isPaused stopwatch =
 tick : Stopwatch -> Stopwatch
 tick stopwatch =
     { stopwatch | time = stopwatch.time + 1 }
+
+
+
+-- VIEW
+
+
+toClockString : Stopwatch -> String
+toClockString stopwatch =
+    let
+        hours =
+            stopwatch.time // 3600
+
+        minutes =
+            modBy 3600 stopwatch.time // 60
+
+        seconds =
+            modBy 60 (modBy 3600 stopwatch.time)
+
+        zeroPad i =
+            if String.length (String.fromInt i) == 1 then
+                "0" ++ String.fromInt i
+
+            else
+                String.fromInt i
+    in
+    case ( minutes > 0, hours > 0 ) of
+        ( False, False ) ->
+            String.fromInt seconds
+
+        ( True, False ) ->
+            String.fromInt minutes ++ ":" ++ zeroPad seconds
+
+        ( False, True ) ->
+            String.fromInt hours ++ ":" ++ zeroPad minutes ++ ":" ++ zeroPad seconds
+
+        ( True, True ) ->
+            String.fromInt hours ++ ":" ++ zeroPad minutes ++ ":" ++ zeroPad seconds
