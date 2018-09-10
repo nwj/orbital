@@ -4,6 +4,7 @@ module Build exposing
     , anyTimingsByTime
     , decodeBuild
     , encodeBuild
+    , equal
     , init
     , removeTiming
     , timingsByTime
@@ -27,7 +28,30 @@ type alias Build =
 
 init : Int -> Build
 init id =
-    Build id "" []
+    Build id "My Build" []
+
+
+equal : Build -> Build -> Bool
+equal build1 build2 =
+    build1.id == build2.id && build1.name == build2.name && timingsEqual build1 build2
+
+
+timingsEqual : Build -> Build -> Bool
+timingsEqual build1 build2 =
+    let
+        timings1 =
+            List.sortBy .id build1.timings
+
+        timings2 =
+            List.sortBy .id build2.timings
+
+        listsAreEqualLength =
+            List.length timings1 == List.length timings2
+
+        listElementsAreEqual =
+            List.all (\t -> Timing.equal (Tuple.first t) (Tuple.second t)) <| List.map2 Tuple.pair timings1 timings2
+    in
+    listsAreEqualLength && listElementsAreEqual
 
 
 

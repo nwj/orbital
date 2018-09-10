@@ -1,5 +1,13 @@
+.root {
+	max-width: 300px;
+	margin: auto;
+}
+
 .header {
+	display: flex;
+	justify-content: center;
 	align-items: center;
+	padding: 10px;
 }
 
 .logo {
@@ -14,10 +22,10 @@
 .stopwatch {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	flex-grow: 5;
-	padding: 20px;
+	padding: 10px;
 }
-
 .stopwatch__reset {
 	height: 35px;
 	width: 35px;
@@ -52,5 +60,58 @@
 }
 
 .stopwatch__clock--hidden {
+	display: none;
+}
+
+.build {
+	display: flex;
+	flex-direction: column;
+	padding: 10px;
+}
+
+.build__name {
+	font-family: "Roboto", sans-serif;
+	font-size: 25px;
+	display: block;
+	border: 2px dashed lightgrey;
+	margin-bottom: 5px;
+	width: 100%;
+}
+
+.build__controls {
+	display: flex;
+	align-self: flex-end;
+}
+
+.build__name:hover {
+	border: 2px dashed black;
+}
+
+.build__name:focus {
+	border: 2px dashed black;`
+}
+
+.build__button {
+	display: flex;
+	align-items: center;
+	border: none;
+	background-color: transparent;
+	font-family: "Roboto", sans-serif;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.build__button .feather {
+	height: 14px;
+	width: 14px;
+	margin-right: 3px;
+}
+
+.build__button--disabled {
+	color: lightgrey;
+	cursor: default;
+}
+
+.build__button--hidden {
 	display: none;
 }

@@ -3,6 +3,7 @@ module Timing exposing
     , anyTimingsByTime
     , decodeTiming
     , encodeTiming
+    , equal
     , timingsByTime
     )
 
@@ -19,6 +20,11 @@ type alias Timing =
     , time : Int
     , phrase : String
     }
+
+
+equal : Timing -> Timing -> Bool
+equal timing1 timing2 =
+    timing1.id == timing2.id && timing1.time == timing2.time && timing1.phrase == timing2.phrase
 
 
 

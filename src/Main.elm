@@ -185,13 +185,17 @@ update msg model =
             )
 
         StoreBuild ->
-            let
-                updatedBuilds =
-                    Dict.insert model.currentBuild.id model.currentBuild model.builds
-            in
-            ( { model | builds = updatedBuilds }
-            , buildsToStore <| Json.Encode.list Build.encodeBuild <| Dict.values updatedBuilds
-            )
+            if currentBuildCanSave model then
+                let
+                    updatedBuilds =
+                        Dict.insert model.currentBuild.id model.currentBuild model.builds
+                in
+                ( { model | builds = updatedBuilds }
+                , buildsToStore <| Json.Encode.list Build.encodeBuild <| Dict.values updatedBuilds
+                )
+
+            else
+                ( model, Cmd.none )
 
         RemoveBuild build ->
             let
@@ -229,6 +233,20 @@ update msg model =
             )
 
 
+currentBuildCanSave : Model -> Bool
+currentBuildCanSave model =
+    if (String.length <| String.trim model.currentBuild.name) == 0 then
+        False
+
+    else
+        case Dict.get model.currentBuild.id model.builds of
+            Just build ->
+                not <| Build.equal build model.currentBuild
+
+            Nothing ->
+                True
+
+
 
 -- SUBSCRIPTIONS
 
@@ -244,9 +262,10 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-    div []
+    div [ class "root" ]
         [ viewHeader
         , viewStopwatch model.stopwatch
+        , viewBuildControls model
         , div []
             [ div []
                 (List.map
@@ -255,11 +274,6 @@ view model =
                 )
             ]
         , div [] (viewTimings model)
-        , div []
-            [ input [ type_ "text", placeholder "Name your build", value model.currentBuild.name, onInput NameBuild ] []
-            , button [ onClick StoreBuild ] [ text "Save Build" ]
-            , button [ onClick NewBuild ] [ text "New Build" ]
-            ]
         , div []
             [ input [ type_ "number", placeholder "Enter timing", value (String.fromInt model.newTiming), onInput NewTime ] []
             , input [ type_ "text", placeholder "Enter phrase", value model.newTimingPhrase, onInput NewPhrase ] []
@@ -310,6 +324,47 @@ viewStopwatchToggleButtonIcon stopwatch =
 
     else
         FeatherIcons.pause
+
+
+viewBuildControls : Model -> Html Msg
+viewBuildControls model =
+    div [ class "build" ]
+        [ div []
+            [ input
+                [ class "build__name"
+                , type_ "text"
+                , value model.currentBuild.name
+                , placeholder "Name for this build"
+                , onInput NameBuild
+                ]
+                []
+            ]
+        , div [ class "build__controls" ]
+            [ button
+                [ classList
+                    [ ( "build__button", True )
+                    , ( "build__button--hidden", False )
+                    ]
+                , onClick NewBuild
+                ]
+                [ FeatherIcons.plusSquare, text "New Build" ]
+            , button
+                [ classList
+                    [ ( "build__button", True )
+                    , ( "build__button--hidden", True )
+                    ]
+                ]
+                [ FeatherIcons.repeat, text "Swap Build" ]
+            , button
+                [ classList
+                    [ ( "build__button", True )
+                    , ( "build__button--disabled", not <| currentBuildCanSave model )
+                    ]
+                , onClick StoreBuild
+                ]
+                [ FeatherIcons.save, text "Save Build" ]
+            ]
+        ]
 
 
 viewTimings : Model -> List (Html Msg)
