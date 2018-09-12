@@ -268,8 +268,19 @@ update msg model =
                 newId =
                     String.fromInt newIdInt
 
+                latestTiming =
+                    Build.latestTiming model.currentBuild
+
+                newTime =
+                    case latestTiming of
+                        Just t ->
+                            t.time + 1
+
+                        Nothing ->
+                            0
+
                 newTiming =
-                    Timing newId 0 ""
+                    Timing newId newTime ""
             in
             ( { model
                 | currentBuild = Build.addTiming newTiming model.currentBuild
@@ -369,15 +380,12 @@ view model =
         , viewStopwatch model.stopwatch
         , viewBuildControls model
         , viewTimings model
-        , div []
+        , div [ class "builds" ]
             [ div []
                 (List.map
                     (\b -> div [] [ a [ onClick (SelectBuild b) ] [ text b.name ], button [ onClick <| RemoveBuild b ] [ text "X" ] ])
                     (Dict.values model.builds)
                 )
-            ]
-        , div []
-            [ button [ onClick AddTiming ] [ text "Add Timing" ]
             ]
         ]
 
@@ -469,10 +477,21 @@ viewBuildControls model =
 
 viewTimings : Model -> Html Msg
 viewTimings model =
-    div [ class "timings" ] <|
-        List.map viewTiming <|
-            List.sortBy .time <|
-                Dict.values model.currentBuild.timings
+    div [ class "timings" ]
+        [ div
+            [ class "timings__list" ]
+            (List.map viewTiming <|
+                List.sortBy .time <|
+                    Dict.values model.currentBuild.timings
+            )
+        , button
+            [ class "timings__add"
+            , onClick AddTiming
+            ]
+            [ FeatherIcons.plus
+            , text "Add Timing"
+            ]
+        ]
 
 
 viewTiming : Timing -> Html Msg

@@ -6,6 +6,7 @@ module Build exposing
     , encodeBuild
     , equal
     , init
+    , latestTiming
     , removeTiming
     , timingsByTime
     )
@@ -81,6 +82,11 @@ anyTimingsByTime time build =
 timingsByTime : Int -> Build -> List Timing
 timingsByTime time build =
     Timing.timingsByTime time <| Dict.values build.timings
+
+
+latestTiming : Build -> Maybe Timing
+latestTiming build =
+    List.head <| List.reverse <| List.sortBy .time <| Dict.values build.timings
 
 
 

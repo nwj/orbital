@@ -186,3 +186,30 @@
 .timing__remove:hover {
 	color: black;
 }
+
+.timings {
+	margin-top: 30px;
+}
+
+.timings__add {
+	display: flex;
+	align-items: center;
+	margin: auto;
+	border: none;
+	background: none;
+	font-family: "Roboto", sans-serif;
+	font-size: 16px;
+	cursor: pointer;
+}
+
+.timings__add .feather {
+	width: 16px;
+	height: 16px;
+
+}
+
+.builds {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
