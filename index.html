@@ -14,7 +14,7 @@
       node: document.getElementById("elm"),
       flags: {
 	"seedInt": Date.now(),
-	"storedBuilds" : JSON.parse(localStorage.getItem('storedBuilds')) || []
+	"storedBuilds" : JSON.parse(localStorage.getItem('storedBuilds')) || {}
       }
     });
 

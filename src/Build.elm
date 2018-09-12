@@ -10,6 +10,7 @@ module Build exposing
     , timingsByTime
     )
 
+import Dict exposing (Dict)
 import Json.Decode exposing (field)
 import Json.Encode
 import Timing exposing (Timing)
@@ -20,15 +21,15 @@ import Timing exposing (Timing)
 
 
 type alias Build =
-    { id : Int
+    { id : String
     , name : String
-    , timings : List Timing
+    , timings : Dict String Timing
     }
 
 
-init : Int -> Build
+init : String -> Build
 init id =
-    Build id "My Build" []
+    Build id "My Build" Dict.empty
 
 
 equal : Build -> Build -> Bool
@@ -40,10 +41,10 @@ timingsEqual : Build -> Build -> Bool
 timingsEqual build1 build2 =
     let
         timings1 =
-            List.sortBy .id build1.timings
+            List.sortBy .id <| Dict.values build1.timings
 
         timings2 =
-            List.sortBy .id build2.timings
+            List.sortBy .id <| Dict.values build2.timings
 
         listsAreEqualLength =
             List.length timings1 == List.length timings2
@@ -60,12 +61,12 @@ timingsEqual build1 build2 =
 
 addTiming : Timing -> Build -> Build
 addTiming newTiming build =
-    { build | timings = newTiming :: build.timings }
+    { build | timings = Dict.insert newTiming.id newTiming build.timings }
 
 
 removeTiming : Timing -> Build -> Build
 removeTiming timingToRemove build =
-    { build | timings = List.filter (\timing -> not (timing.id == timingToRemove.id)) build.timings }
+    { build | timings = Dict.remove timingToRemove.id build.timings }
 
 
 
@@ -74,12 +75,12 @@ removeTiming timingToRemove build =
 
 anyTimingsByTime : Int -> Build -> Bool
 anyTimingsByTime time build =
-    Timing.anyTimingsByTime time build.timings
+    Timing.anyTimingsByTime time <| Dict.values build.timings
 
 
 timingsByTime : Int -> Build -> List Timing
 timingsByTime time build =
-    Timing.timingsByTime time build.timings
+    Timing.timingsByTime time <| Dict.values build.timings
 
 
 
@@ -89,15 +90,15 @@ timingsByTime time build =
 decodeBuild : Json.Decode.Decoder Build
 decodeBuild =
     Json.Decode.map3 Build
-        (field "id" Json.Decode.int)
+        (field "id" Json.Decode.string)
         (field "name" Json.Decode.string)
-        (field "timings" <| Json.Decode.list Timing.decodeTiming)
+        (field "timings" <| Json.Decode.dict Timing.decodeTiming)
 
 
 encodeBuild : Build -> Json.Encode.Value
 encodeBuild build =
     Json.Encode.object
-        [ ( "id", Json.Encode.int <| build.id )
+        [ ( "id", Json.Encode.string <| build.id )
         , ( "name", Json.Encode.string <| build.name )
-        , ( "timings", Json.Encode.list Timing.encodeTiming build.timings )
+        , ( "timings", Json.Encode.dict identity Timing.encodeTiming build.timings )
         ]

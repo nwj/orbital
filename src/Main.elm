@@ -36,7 +36,7 @@ main =
 type alias Model =
     { stopwatch : Stopwatch
     , currentBuild : Build
-    , builds : Dict Int Build
+    , builds : Dict String Build
     , newTiming : Int
     , newTimingPhrase : String
     , idSeed : Random.Seed
@@ -49,14 +49,14 @@ init flags =
         decodedFlags =
             decodeFlags flags
 
-        ( newBuildId, newSeed ) =
+        ( newBuildIdInt, newSeed ) =
             Random.step anyPositiveInt <| Random.initialSeed decodedFlags.seedInt
 
+        newBuildId =
+            String.fromInt newBuildIdInt
+
         storedBuilds =
-            List.foldr
-                (\b d -> Dict.insert b.id b d)
-                Dict.empty
-                decodedFlags.storedBuilds
+            decodedFlags.storedBuilds
     in
     ( Model Stopwatch.init (Build.init newBuildId) storedBuilds 0 "" newSeed
     , Cmd.none
@@ -84,7 +84,7 @@ port buildsToStore : Json.Encode.Value -> Cmd msg
 
 type alias Flags =
     { seedInt : Int
-    , storedBuilds : List Build
+    , storedBuilds : Dict String Build
     }
 
 
@@ -92,7 +92,7 @@ flagsDecoder : Json.Decode.Decoder Flags
 flagsDecoder =
     Json.Decode.map2 Flags
         (field "seedInt" Json.Decode.int)
-        (field "storedBuilds" <| Json.Decode.list Build.decodeBuild)
+        (field "storedBuilds" <| Json.Decode.dict Build.decodeBuild)
 
 
 decodeFlags : Json.Decode.Value -> Flags
@@ -102,7 +102,7 @@ decodeFlags encodedFlags =
             flags
 
         Err e ->
-            Flags -1 []
+            Flags -1 Dict.empty
 
 
 
@@ -166,8 +166,11 @@ update msg model =
 
         AddTiming ->
             let
-                ( newId, newSeed ) =
+                ( newIdInt, newSeed ) =
                     Random.step anyPositiveInt model.idSeed
+
+                newId =
+                    String.fromInt newIdInt
 
                 newTiming =
                     Timing newId model.newTiming model.newTimingPhrase
@@ -191,7 +194,7 @@ update msg model =
                         Dict.insert model.currentBuild.id model.currentBuild model.builds
                 in
                 ( { model | builds = updatedBuilds }
-                , buildsToStore <| Json.Encode.list Build.encodeBuild <| Dict.values updatedBuilds
+                , buildsToStore <| Json.Encode.dict identity Build.encodeBuild updatedBuilds
                 )
 
             else
@@ -208,8 +211,11 @@ update msg model =
 
         NewBuild ->
             let
-                ( newId, newSeed ) =
+                ( newIdInt, newSeed ) =
                     Random.step anyPositiveInt model.idSeed
+
+                newId =
+                    String.fromInt newIdInt
             in
             ( { model | currentBuild = Build.init newId, idSeed = newSeed }
             , Cmd.none
@@ -381,7 +387,7 @@ viewTimings model =
                 , button [ onClick (RemoveTiming t) ] [ text "X" ]
                 ]
     in
-    List.map viewTiming (List.sortBy .time model.currentBuild.timings)
+    List.map viewTiming (List.sortBy .time <| Dict.values model.currentBuild.timings)
 
 
 secondsToClockString : Int -> String

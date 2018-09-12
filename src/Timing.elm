@@ -16,7 +16,7 @@ import Json.Encode
 
 
 type alias Timing =
-    { id : Int
+    { id : String
     , time : Int
     , phrase : String
     }
@@ -48,7 +48,7 @@ timingsByTime time timings =
 decodeTiming : Json.Decode.Decoder Timing
 decodeTiming =
     Json.Decode.map3 Timing
-        (field "id" Json.Decode.int)
+        (field "id" Json.Decode.string)
         (field "time" Json.Decode.int)
         (field "phrase" Json.Decode.string)
 
@@ -56,7 +56,7 @@ decodeTiming =
 encodeTiming : Timing -> Json.Encode.Value
 encodeTiming timing =
     Json.Encode.object
-        [ ( "id", Json.Encode.int <| timing.id )
+        [ ( "id", Json.Encode.string <| timing.id )
         , ( "time", Json.Encode.int <| timing.time )
         , ( "phrase", Json.Encode.string <| timing.phrase )
         ]
