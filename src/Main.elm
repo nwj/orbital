@@ -4,9 +4,10 @@ import Browser
 import Build exposing (Build)
 import Dict exposing (Dict)
 import FeatherIcons
-import Html exposing (Html, a, button, div, input, text)
+import Html exposing (Attribute, Html, a, button, div, input, span, text)
 import Html.Attributes exposing (class, classList, placeholder, type_, value)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (on, onClick, onInput, targetValue)
+import Html.Lazy exposing (lazy)
 import Json.Decode exposing (field)
 import Json.Encode
 import Random
@@ -37,8 +38,6 @@ type alias Model =
     { stopwatch : Stopwatch
     , currentBuild : Build
     , builds : Dict String Build
-    , newTiming : Int
-    , newTimingPhrase : String
     , idSeed : Random.Seed
     }
 
@@ -54,11 +53,8 @@ init flags =
 
         newBuildId =
             String.fromInt newBuildIdInt
-
-        storedBuilds =
-            decodedFlags.storedBuilds
     in
-    ( Model Stopwatch.init (Build.init newBuildId) storedBuilds 0 "" newSeed
+    ( Model Stopwatch.init (Build.init newBuildId) decodedFlags.storedBuilds newSeed
     , Cmd.none
     )
 
@@ -113,10 +109,12 @@ type Msg
     = Tick Time.Posix
     | ResetStopwatch
     | ToggleStopwatch
-    | NewTime String
-    | NewPhrase String
-    | AddTiming
+    | TimingSecondsChanged Timing String
+    | TimingMinutesChanged Timing String
+    | TimingHoursChanged Timing String
+    | TimingPhraseChanged Timing String
     | RemoveTiming Timing
+    | AddTiming
     | StoreBuild
     | RemoveBuild Build
     | NewBuild
@@ -154,13 +152,111 @@ update msg model =
             , Cmd.none
             )
 
-        NewTime timing ->
-            ( { model | newTiming = Maybe.withDefault 0 (String.toInt timing) }
+        TimingSecondsChanged timing stringSeconds ->
+            let
+                oldSeconds =
+                    Timing.toClockSeconds timing
+
+                newSeconds =
+                    Maybe.withDefault oldSeconds <| String.toInt stringSeconds
+
+                secondsDiff =
+                    newSeconds - oldSeconds
+
+                newTime =
+                    timing.time + secondsDiff
+
+                newTiming =
+                    { timing | time = newTime }
+
+                newTimings =
+                    Dict.insert newTiming.id newTiming model.currentBuild.timings
+
+                oldCurrentBuild =
+                    model.currentBuild
+
+                newCurrentBuild =
+                    { oldCurrentBuild | timings = newTimings }
+            in
+            ( { model | currentBuild = newCurrentBuild }
             , Cmd.none
             )
 
-        NewPhrase phrase ->
-            ( { model | newTimingPhrase = phrase }
+        TimingMinutesChanged timing stringMinutes ->
+            let
+                oldMinutes =
+                    Timing.toClockMinutes timing
+
+                newMinutes =
+                    Maybe.withDefault oldMinutes <| String.toInt stringMinutes
+
+                minutesDiff =
+                    newMinutes - oldMinutes
+
+                newTime =
+                    timing.time + (minutesDiff * 60)
+
+                newTiming =
+                    { timing | time = newTime }
+
+                newTimings =
+                    Dict.insert newTiming.id newTiming model.currentBuild.timings
+
+                oldCurrentBuild =
+                    model.currentBuild
+
+                newCurrentBuild =
+                    { oldCurrentBuild | timings = newTimings }
+            in
+            ( { model | currentBuild = newCurrentBuild }
+            , Cmd.none
+            )
+
+        TimingHoursChanged timing stringHours ->
+            let
+                oldHours =
+                    Timing.toClockHours timing
+
+                newHours =
+                    Maybe.withDefault oldHours <| String.toInt stringHours
+
+                hoursDiff =
+                    newHours - oldHours
+
+                newTime =
+                    timing.time + (hoursDiff * 3600)
+
+                newTiming =
+                    { timing | time = newTime }
+
+                newTimings =
+                    Dict.insert newTiming.id newTiming model.currentBuild.timings
+
+                oldCurrentBuild =
+                    model.currentBuild
+
+                newCurrentBuild =
+                    { oldCurrentBuild | timings = newTimings }
+            in
+            ( { model | currentBuild = newCurrentBuild }
+            , Cmd.none
+            )
+
+        TimingPhraseChanged timing newPhrase ->
+            let
+                newTiming =
+                    { timing | phrase = newPhrase }
+
+                newTimings =
+                    Dict.insert newTiming.id newTiming model.currentBuild.timings
+
+                oldCurrentBuild =
+                    model.currentBuild
+
+                newCurrentBuild =
+                    { oldCurrentBuild | timings = newTimings }
+            in
+            ( { model | currentBuild = newCurrentBuild }
             , Cmd.none
             )
 
@@ -173,7 +269,7 @@ update msg model =
                     String.fromInt newIdInt
 
                 newTiming =
-                    Timing newId model.newTiming model.newTimingPhrase
+                    Timing newId 0 ""
             in
             ( { model
                 | currentBuild = Build.addTiming newTiming model.currentBuild
@@ -272,6 +368,7 @@ view model =
         [ viewHeader
         , viewStopwatch model.stopwatch
         , viewBuildControls model
+        , viewTimings model
         , div []
             [ div []
                 (List.map
@@ -279,11 +376,8 @@ view model =
                     (Dict.values model.builds)
                 )
             ]
-        , div [] (viewTimings model)
         , div []
-            [ input [ type_ "number", placeholder "Enter timing", value (String.fromInt model.newTiming), onInput NewTime ] []
-            , input [ type_ "text", placeholder "Enter phrase", value model.newTimingPhrase, onInput NewPhrase ] []
-            , button [ onClick AddTiming ] [ text "Add Timing" ]
+            [ button [ onClick AddTiming ] [ text "Add Timing" ]
             ]
         ]
 
@@ -373,37 +467,93 @@ viewBuildControls model =
         ]
 
 
-viewTimings : Model -> List (Html Msg)
+viewTimings : Model -> Html Msg
 viewTimings model =
+    div [ class "timings" ] <|
+        List.map viewTiming <|
+            List.sortBy .time <|
+                Dict.values model.currentBuild.timings
+
+
+viewTiming : Timing -> Html Msg
+viewTiming timing =
+    div [ class "timing" ]
+        [ lazy viewTimingTimes timing
+        , input
+            [ class "timing__phrase"
+            , value timing.phrase
+            , onInput <| TimingPhraseChanged timing
+            ]
+            []
+        , button
+            [ class "timing__remove"
+            , onClick <| RemoveTiming timing
+            ]
+            [ FeatherIcons.x ]
+        ]
+
+
+viewTimingTimes : Timing -> Html Msg
+viewTimingTimes timing =
     let
-        timingToText : Timing -> String
-        timingToText t =
-            secondsToClockString t.time ++ " " ++ t.phrase
+        hours =
+            Timing.toClockHours timing
 
-        viewTiming : Timing -> Html Msg
-        viewTiming t =
-            div []
-                [ div [] [ text (timingToText t) ]
-                , button [ onClick (RemoveTiming t) ] [ text "X" ]
-                ]
-    in
-    List.map viewTiming (List.sortBy .time <| Dict.values model.currentBuild.timings)
+        minutes =
+            Timing.toClockMinutes timing
 
+        seconds =
+            Timing.toClockSeconds timing
 
-secondsToClockString : Int -> String
-secondsToClockString s =
-    let
-        format i =
+        zeroPad i =
             if String.length (String.fromInt i) == 1 then
                 "0" ++ String.fromInt i
 
             else
                 String.fromInt i
-
-        displayMinutes =
-            format (s // 60)
-
-        displaySeconds =
-            format (modBy 60 s)
     in
-    displayMinutes ++ " : " ++ displaySeconds
+    if hours < 1 then
+        div [ class "timing__times" ]
+            [ input
+                [ class "timing__time"
+                , value <| zeroPad minutes
+                , onBlurWithTargetValue <| TimingMinutesChanged timing
+                ]
+                []
+            , span [ class "timing__time-separator" ] [ text ":" ]
+            , input
+                [ class "timing__time"
+                , value <| zeroPad seconds
+                , onBlurWithTargetValue <| TimingSecondsChanged timing
+                ]
+                []
+            ]
+
+    else
+        div [ class "timing__times" ]
+            [ input
+                [ class "timing__time"
+                , value <| zeroPad hours
+                , onBlurWithTargetValue <| TimingHoursChanged timing
+                ]
+                []
+            , span [ class "timing__time-separator" ] [ text ":" ]
+            , input
+                [ class "timing__time"
+                , value <| zeroPad minutes
+                , onBlurWithTargetValue <| TimingMinutesChanged timing
+                ]
+                []
+            , span [ class "timing__time-separator" ] [ text ":" ]
+            , input
+                [ class "timing__time"
+                , value <| zeroPad seconds
+                , onBlurWithTargetValue <| TimingSecondsChanged timing
+                ]
+                []
+            ]
+
+
+onBlurWithTargetValue : (String -> msg) -> Attribute msg
+onBlurWithTargetValue tagger =
+    on "blur" (Json.Decode.map tagger targetValue)

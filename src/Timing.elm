@@ -5,6 +5,9 @@ module Timing exposing
     , encodeTiming
     , equal
     , timingsByTime
+    , toClockHours
+    , toClockMinutes
+    , toClockSeconds
     )
 
 import Json.Decode exposing (field)
@@ -39,6 +42,25 @@ anyTimingsByTime time timings =
 timingsByTime : Int -> List Timing -> List Timing
 timingsByTime time timings =
     List.filter (\timing -> timing.time == time) timings
+
+
+
+-- FORMATING TIME
+
+
+toClockHours : Timing -> Int
+toClockHours timing =
+    timing.time // 3600
+
+
+toClockMinutes : Timing -> Int
+toClockMinutes timing =
+    modBy 3600 timing.time // 60
+
+
+toClockSeconds : Timing -> Int
+toClockSeconds timing =
+    modBy 60 (modBy 3600 timing.time)
 
 
 

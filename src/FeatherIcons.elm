@@ -1,4 +1,4 @@
-module FeatherIcons exposing (pause, play, plusSquare, repeat, rotateCcw, save)
+module FeatherIcons exposing (pause, play, plusSquare, repeat, rotateCcw, save, x)
 
 import Html exposing (Html)
 import Svg exposing (Svg, svg)
@@ -67,4 +67,12 @@ plusSquare =
         [ Svg.rect [ Svg.Attributes.x "3", y "3", width "18", height "18", rx "2", ry "2" ] []
         , Svg.line [ x1 "12", y1 "8", x2 "12", y2 "16" ] []
         , Svg.line [ x1 "8", y1 "12", x2 "16", y2 "12" ] []
+        ]
+
+
+x : Html msg
+x =
+    svgFeatherIcon "x"
+        [ Svg.line [ x1 "18", y1 "6", x2 "6", y2 "18" ] []
+        , Svg.line [ x1 "6", y1 "6", x2 "18", y2 "18" ] []
         ]

@@ -1,6 +1,7 @@
 .root {
-	max-width: 300px;
+	max-width: 375px;
 	margin: auto;
+	font-family: "Roboto", sans-serif;
 }
 
 .header {
@@ -55,7 +56,6 @@
 }
 
 .stopwatch__clock {
-	font-family: "Roboto", sans-serif;
 	font-size: 30px;
 }
 
@@ -76,6 +76,7 @@
 	border: 2px dashed lightgrey;
 	margin-bottom: 5px;
 	width: 100%;
+	padding: 3px 5px;
 }
 
 .build__controls {
@@ -114,4 +115,74 @@
 
 .build__button--hidden {
 	display: none;
+}
+
+.timing {
+	display: flex;
+	padding: 10px;
+	justify-content: space-around;
+	align-items: center;
+}
+
+.timing__times {
+	display: flex;
+}
+
+.timing__time {
+	font-family: "Roboto", sans-serif;
+	font-size: 16px;
+	border: 2px dashed lightgrey;
+	width: 25px;
+	text-align: center;
+	padding: 2px 3px;
+}
+
+.timing__time:hover {
+	border: 2px dashed black;
+}
+
+.timing__time:focus {
+	border: 2px dashed black;
+}
+
+.timing__time-separator {
+	font-family: "Roboto", sans-serif;
+	font-size: 16px;
+	margin: 0 5px;
+}
+
+.timing__phrase {
+	font-family: "Roboto", sans-serif;
+	font-size: 16px;
+	border: 2px dashed lightgrey;
+	padding: 2px 3px;
+}
+
+.timing__phrase:hover {
+	border: 2px dashed black;
+}
+
+.timing__phrase:focus {
+	border: 2px dashed black;
+}
+
+.timing__remove {
+	background-color: transparent;
+	border: none;
+	display: none;
+	cursor: pointer;
+	color: lightgrey;
+}
+
+.timing__remove .feather {
+	width: 18px;
+	height: 18px;
+}
+
+.timing:hover .timing__remove {
+	display: block;
+}
+
+.timing__remove:hover {
+	color: black;
 }
