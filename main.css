@@ -122,6 +122,7 @@
 	padding: 10px;
 	justify-content: space-around;
 	align-items: center;
+	position: relative;
 }
 
 .timing__times {
@@ -172,6 +173,9 @@
 	display: none;
 	cursor: pointer;
 	color: lightgrey;
+	position: absolute;
+	top: 15px;
+	right: -5px;
 }
 
 .timing__remove .feather {
@@ -200,12 +204,12 @@
 	font-family: "Roboto", sans-serif;
 	font-size: 16px;
 	cursor: pointer;
+	margin-top: 10px;
 }
 
 .timings__add .feather {
 	width: 16px;
 	height: 16px;
-
 }
 
 .builds {
