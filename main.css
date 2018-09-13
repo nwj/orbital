@@ -124,7 +124,7 @@
 
 .timing {
 	display: flex;
-	padding: 10px 10px 25px 10px;
+	padding: 0 10px 35px 10px;
 	justify-content: center;
 	align-items: center;
 	position: relative;
@@ -182,7 +182,7 @@
 	cursor: pointer;
 	color: lightgrey;
 	position: absolute;
-	bottom: 3px;
+	bottom: 13px;
 	right: 5px;
 	font-family: "Roboto", sans-serif;
 	font-size: 14px;
@@ -194,6 +194,10 @@
 }
 
 .timing:hover .timing__remove {
+	display: flex;
+}
+
+.timing:focus .timing__remove {
 	display: flex;
 }
 
