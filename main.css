@@ -69,6 +69,11 @@
 	padding: 10px;
 }
 
+.build__name-container {
+	display: flex;
+	justify-content: center;
+}
+
 .build__name {
 	font-family: "Roboto", sans-serif;
 	font-size: 25px;
@@ -119,14 +124,15 @@
 
 .timing {
 	display: flex;
-	padding: 10px;
-	justify-content: space-around;
+	padding: 10px 10px 25px 10px;
+	justify-content: center;
 	align-items: center;
 	position: relative;
 }
 
 .timing__times {
 	display: flex;
+	margin-right: 15px;
 }
 
 .timing__time {
@@ -157,6 +163,8 @@
 	font-size: 16px;
 	border: 2px dashed lightgrey;
 	padding: 2px 3px;
+	width: 100%;
+	max-width: 300px;
 }
 
 .timing__phrase:hover {
@@ -174,17 +182,19 @@
 	cursor: pointer;
 	color: lightgrey;
 	position: absolute;
-	top: 15px;
-	right: -5px;
+	bottom: 3px;
+	right: 5px;
+	font-family: "Roboto", sans-serif;
+	font-size: 14px;
 }
 
 .timing__remove .feather {
-	width: 18px;
-	height: 18px;
+	width: 16px;
+	height: 16px;
 }
 
 .timing:hover .timing__remove {
-	display: block;
+	display: flex;
 }
 
 .timing__remove:hover {

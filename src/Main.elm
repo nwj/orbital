@@ -437,7 +437,7 @@ viewStopwatchToggleButtonIcon stopwatch =
 viewBuildControls : Model -> Html Msg
 viewBuildControls model =
     div [ class "build" ]
-        [ div []
+        [ div [ class "build__name-container" ]
             [ input
                 [ class "build__name"
                 , type_ "text"
@@ -508,7 +508,7 @@ viewTiming timing =
             [ class "timing__remove"
             , onClick <| RemoveTiming timing
             ]
-            [ FeatherIcons.x ]
+            [ FeatherIcons.x, text "Remove Timing" ]
         ]
 
 
