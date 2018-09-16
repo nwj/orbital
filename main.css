@@ -226,8 +226,10 @@
 	height: 16px;
 }
 
-.builds {
-	position: absolute;
-	top: 0;
-	right: 0;
+.current-build--hidden {
+	display: none;
+}
+
+.builds--hidden {
+	display: none;
 }

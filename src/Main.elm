@@ -41,6 +41,7 @@ type alias Model =
     , currentBuild : Build
     , builds : Dict String Build
     , idSeed : Random.Seed
+    , showBuildManagement : Bool
     }
 
 
@@ -56,7 +57,7 @@ init flags =
         newBuildId =
             String.fromInt newBuildIdInt
     in
-    ( Model Stopwatch.init (Build.init newBuildId) decodedFlags.storedBuilds newSeed
+    ( Model Stopwatch.init (Build.init newBuildId) decodedFlags.storedBuilds newSeed False
     , Cmd.none
     )
 
@@ -322,18 +323,10 @@ update msg model =
             , Cmd.none
             )
 
-        StoreBuild ->
-            if currentBuildCanSave model then
-                let
-                    updatedBuilds =
-                        Dict.insert model.currentBuild.id model.currentBuild model.builds
-                in
-                ( { model | builds = updatedBuilds }
-                , buildsToStore <| Json.Encode.dict identity Build.encodeBuild updatedBuilds
-                )
-
-            else
-                ( model, Cmd.none )
+        ToggleBuildManagement ->
+            ( { model | showBuildManagement = not model.showBuildManagement }
+            , Cmd.none
+            )
 
         RemoveBuild build ->
             let
@@ -352,24 +345,12 @@ update msg model =
                 newId =
                     String.fromInt newIdInt
             in
-            ( { model | currentBuild = Build.init newId, idSeed = newSeed }
+            ( { model | currentBuild = Build.init newId, idSeed = newSeed, showBuildManagement = False }
             , Cmd.none
             )
 
         SelectBuild build ->
-            ( { model | currentBuild = build }
-            , Cmd.none
-            )
-
-        NameBuild newName ->
-            let
-                currentBuild =
-                    model.currentBuild
-
-                newBuild =
-                    { currentBuild | name = newName }
-            in
-            ( { model | currentBuild = newBuild }
+            ( { model | currentBuild = build, showBuildManagement = False }
             , Cmd.none
             )
 
@@ -406,15 +387,8 @@ view model =
     div [ class "root" ]
         [ viewHeader
         , viewStopwatch model.stopwatch
-        , viewBuildControls model
-        , viewTimings model
-        , div [ class "builds" ]
-            [ div []
-                (List.map
-                    (\b -> div [] [ a [ onClick (SelectBuild b) ] [ text b.name ], button [ onClick <| RemoveBuild b ] [ text "X" ] ])
-                    (Dict.values model.builds)
-                )
-            ]
+        , viewCurrentBuild model
+        , viewBuildManagement model
         ]
 
 
@@ -462,6 +436,19 @@ viewStopwatchToggleButtonIcon stopwatch =
         FeatherIcons.pause
 
 
+viewCurrentBuild : Model -> Html Msg
+viewCurrentBuild model =
+    div
+        [ classList
+            [ ( "current-build", True )
+            , ( "current-build--hidden", model.showBuildManagement )
+            ]
+        ]
+        [ viewBuildControls model
+        , viewTimings model
+        ]
+
+
 viewBuildControls : Model -> Html Msg
 viewBuildControls model =
     div [ class "build" ]
@@ -487,8 +474,9 @@ viewBuildControls model =
             , button
                 [ classList
                     [ ( "build__button", True )
-                    , ( "build__button--hidden", True )
+                    , ( "build__button--hidden", False )
                     ]
+                , onClick ToggleBuildManagement
                 ]
                 [ FeatherIcons.repeat, text "Swap Build" ]
             , button
@@ -581,24 +569,42 @@ viewTimingTimes timing =
             [ input
                 [ class "timing__time"
                 , value <| zeroPad hours
-                , onBlurWithTargetValue <| TimingHoursChanged timing
+                , onBlurWithTargetValue <| TimingHoursChange timing
                 ]
                 []
             , span [ class "timing__time-separator" ] [ text ":" ]
             , input
                 [ class "timing__time"
                 , value <| zeroPad minutes
-                , onBlurWithTargetValue <| TimingMinutesChanged timing
+                , onBlurWithTargetValue <| TimingMinutesChange timing
                 ]
                 []
             , span [ class "timing__time-separator" ] [ text ":" ]
             , input
                 [ class "timing__time"
                 , value <| zeroPad seconds
-                , onBlurWithTargetValue <| TimingSecondsChanged timing
+                , onBlurWithTargetValue <| TimingSecondsChange timing
                 ]
                 []
             ]
+
+
+viewBuildManagement : Model -> Html Msg
+viewBuildManagement model =
+    div
+        [ classList
+            [ ( "builds", True )
+            , ( "builds--hidden", not model.showBuildManagement )
+            ]
+        ]
+        [ div [ class "builds__list" ]
+            (List.map
+                (\b -> div [] [ a [ onClick (SelectBuild b) ] [ text b.name ], button [ onClick <| RemoveBuild b ] [ text "X" ] ])
+                (Dict.values model.builds)
+            )
+        , button [ onClick NewBuild ] [ text "New Build" ]
+        , button [ onClick ToggleBuildManagement ] [ text "Back To Current Build" ]
+        ]
 
 
 onBlurWithTargetValue : (String -> msg) -> Attribute msg
