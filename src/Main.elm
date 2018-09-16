@@ -17,6 +17,8 @@ import Timing exposing (Timing)
 
 
 
+-- TODO (nwj) Style build management
+-- TODO (nwj) Automate build process and deployment
 -- TODO (nwj) Add build duplication
 -- TODO (nwj) Add ability to export or import a build
 
