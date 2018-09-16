@@ -111,17 +111,18 @@ type Msg
     = Tick Time.Posix
     | ResetStopwatch
     | ToggleStopwatch
-    | TimingSecondsChanged Timing String
-    | TimingMinutesChanged Timing String
-    | TimingHoursChanged Timing String
-    | TimingPhraseChanged Timing String
+    | CurrentBuildNameChange String
+    | StoreCurrentBuild
+    | TimingSecondsChange Timing String
+    | TimingMinutesChange Timing String
+    | TimingHoursChange Timing String
+    | TimingPhraseChange Timing String
     | RemoveTiming Timing
     | AddTiming
-    | StoreBuild
+    | ToggleBuildManagement
     | RemoveBuild Build
     | NewBuild
     | SelectBuild Build
-    | NameBuild String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -154,7 +155,32 @@ update msg model =
             , Cmd.none
             )
 
-        TimingSecondsChanged timing stringSeconds ->
+        CurrentBuildNameChange newName ->
+            let
+                currentBuild =
+                    model.currentBuild
+
+                newBuild =
+                    { currentBuild | name = newName }
+            in
+            ( { model | currentBuild = newBuild, showBuildManagement = False }
+            , Cmd.none
+            )
+
+        StoreCurrentBuild ->
+            if currentBuildCanSave model then
+                let
+                    updatedBuilds =
+                        Dict.insert model.currentBuild.id model.currentBuild model.builds
+                in
+                ( { model | builds = updatedBuilds }
+                , buildsToStore <| Json.Encode.dict identity Build.encodeBuild updatedBuilds
+                )
+
+            else
+                ( model, Cmd.none )
+
+        TimingSecondsChange timing stringSeconds ->
             let
                 oldSeconds =
                     Timing.toClockSeconds timing
@@ -184,7 +210,7 @@ update msg model =
             , Cmd.none
             )
 
-        TimingMinutesChanged timing stringMinutes ->
+        TimingMinutesChange timing stringMinutes ->
             let
                 oldMinutes =
                     Timing.toClockMinutes timing
@@ -214,7 +240,7 @@ update msg model =
             , Cmd.none
             )
 
-        TimingHoursChanged timing stringHours ->
+        TimingHoursChange timing stringHours ->
             let
                 oldHours =
                     Timing.toClockHours timing
@@ -244,7 +270,7 @@ update msg model =
             , Cmd.none
             )
 
-        TimingPhraseChanged timing newPhrase ->
+        TimingPhraseChange timing newPhrase ->
             let
                 newTiming =
                     { timing | phrase = newPhrase }
@@ -445,7 +471,7 @@ viewBuildControls model =
                 , type_ "text"
                 , value model.currentBuild.name
                 , placeholder "Name for this build"
-                , onInput NameBuild
+                , onInput CurrentBuildNameChange
                 ]
                 []
             ]
@@ -470,7 +496,7 @@ viewBuildControls model =
                     [ ( "build__button", True )
                     , ( "build__button--disabled", not <| currentBuildCanSave model )
                     ]
-                , onClick StoreBuild
+                , onClick StoreCurrentBuild
                 ]
                 [ FeatherIcons.save, text "Save Build" ]
             ]
@@ -503,7 +529,7 @@ viewTiming timing =
         , input
             [ class "timing__phrase"
             , value timing.phrase
-            , onInput <| TimingPhraseChanged timing
+            , onInput <| TimingPhraseChange timing
             ]
             []
         , button
@@ -538,14 +564,14 @@ viewTimingTimes timing =
             [ input
                 [ class "timing__time"
                 , value <| zeroPad minutes
-                , onBlurWithTargetValue <| TimingMinutesChanged timing
+                , onBlurWithTargetValue <| TimingMinutesChange timing
                 ]
                 []
             , span [ class "timing__time-separator" ] [ text ":" ]
             , input
                 [ class "timing__time"
                 , value <| zeroPad seconds
-                , onBlurWithTargetValue <| TimingSecondsChanged timing
+                , onBlurWithTargetValue <| TimingSecondsChange timing
                 ]
                 []
             ]
