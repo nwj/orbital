@@ -334,7 +334,7 @@ update msg model =
                     Dict.remove build.id model.builds
             in
             ( { model | builds = updatedBuilds }
-            , buildsToStore <| Json.Encode.list Build.encodeBuild <| Dict.values updatedBuilds
+            , buildsToStore <| Json.Encode.dict identity Build.encodeBuild updatedBuilds
             )
 
         NewBuild ->
