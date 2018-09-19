@@ -440,21 +440,21 @@ viewCurrentBuild : Model -> Html Msg
 viewCurrentBuild model =
     div
         [ classList
-            [ ( "current-build", True )
-            , ( "current-build--hidden", model.showBuildManagement )
+            [ ( "current-build-pane", True )
+            , ( "current-build-pane--hidden", model.showBuildManagement )
             ]
         ]
-        [ viewBuildControls model
+        [ viewCurrentBuildControls model
         , viewTimings model
         ]
 
 
-viewBuildControls : Model -> Html Msg
-viewBuildControls model =
-    div [ class "build" ]
-        [ div [ class "build__name-container" ]
+viewCurrentBuildControls : Model -> Html Msg
+viewCurrentBuildControls model =
+    div [ class "current-build" ]
+        [ div [ class "current-build__name-container" ]
             [ input
-                [ class "build__name"
+                [ class "current-build__name"
                 , type_ "text"
                 , value model.currentBuild.name
                 , placeholder "Name for this build"
@@ -462,27 +462,27 @@ viewBuildControls model =
                 ]
                 []
             ]
-        , div [ class "build__controls" ]
+        , div [ class "current-build__controls" ]
             [ button
                 [ classList
-                    [ ( "build__button", True )
-                    , ( "build__button--hidden", False )
+                    [ ( "current-build__button", True )
+                    , ( "current-build__button--hidden", Dict.size model.builds > 0 )
                     ]
                 , onClick NewBuild
                 ]
                 [ FeatherIcons.plusSquare, text "New Build" ]
             , button
                 [ classList
-                    [ ( "build__button", True )
-                    , ( "build__button--hidden", False )
+                    [ ( "current-build__button", True )
+                    , ( "current-build__button--hidden", Dict.size model.builds < 1 )
                     ]
                 , onClick ToggleBuildManagement
                 ]
                 [ FeatherIcons.repeat, text "Swap Build" ]
             , button
                 [ classList
-                    [ ( "build__button", True )
-                    , ( "build__button--disabled", not <| currentBuildCanSave model )
+                    [ ( "current-build__button", True )
+                    , ( "current-build__button--disabled", not <| currentBuildCanSave model )
                     ]
                 , onClick StoreCurrentBuild
                 ]
@@ -593,17 +593,25 @@ viewBuildManagement : Model -> Html Msg
 viewBuildManagement model =
     div
         [ classList
-            [ ( "builds", True )
-            , ( "builds--hidden", not model.showBuildManagement )
+            [ ( "builds-pane", True )
+            , ( "builds-pane--hidden", not model.showBuildManagement )
             ]
         ]
-        [ div [ class "builds__list" ]
-            (List.map
-                (\b -> div [] [ a [ onClick (SelectBuild b) ] [ text b.name ], button [ onClick <| RemoveBuild b ] [ text "X" ] ])
-                (Dict.values model.builds)
-            )
+        [ div [ class "builds__list" ] (List.map viewBuild <| Dict.values model.builds)
         , button [ onClick NewBuild ] [ text "New Build" ]
         , button [ onClick ToggleBuildManagement ] [ text "Back To Current Build" ]
+        ]
+
+
+viewBuild : Build -> Html Msg
+viewBuild build =
+    div [ class "build" ]
+        [ div [ class "build__name", onClick <| SelectBuild build ] [ text build.name ]
+        , div [ class "build__controls" ]
+            [ button
+                [ class "build__remove", onClick <| RemoveBuild build ]
+                [ FeatherIcons.x, text "Delete" ]
+            ]
         ]
 
 

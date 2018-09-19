@@ -63,18 +63,22 @@
 	display: none;
 }
 
-.build {
+.current-build-pane--hidden {
+	display: none;
+}
+
+.current-build {
 	display: flex;
 	flex-direction: column;
 	padding: 10px;
 }
 
-.build__name-container {
+.current-build__name-container {
 	display: flex;
 	justify-content: center;
 }
 
-.build__name {
+.current-build__name {
 	font-family: "Roboto", sans-serif;
 	font-size: 25px;
 	display: block;
@@ -84,20 +88,20 @@
 	padding: 3px 5px;
 }
 
-.build__controls {
+.current-build__controls {
 	display: flex;
 	align-self: flex-end;
 }
 
-.build__name:hover {
+.current-build__name:hover {
 	border: 2px dashed black;
 }
 
-.build__name:focus {
+.current-build__name:focus {
 	border: 2px dashed black;`
 }
 
-.build__button {
+.current-build__button {
 	display: flex;
 	align-items: center;
 	border: none;
@@ -107,18 +111,18 @@
 	cursor: pointer;
 }
 
-.build__button .feather {
+.current-build__button .feather {
 	height: 14px;
 	width: 14px;
 	margin-right: 3px;
 }
 
-.build__button--disabled {
+.current-build__button--disabled {
 	color: lightgrey;
 	cursor: default;
 }
 
-.build__button--hidden {
+.current-build__button--hidden {
 	display: none;
 }
 
@@ -178,7 +182,6 @@
 .timing__remove {
 	background-color: transparent;
 	border: none;
-	display: none;
 	cursor: pointer;
 	color: lightgrey;
 	position: absolute;
@@ -226,10 +229,56 @@
 	height: 16px;
 }
 
-.current-build--hidden {
+.builds-pane--hidden {
 	display: none;
 }
 
-.builds--hidden {
-	display: none;
+.build {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	margin-top: 20px;
+	padding: 10px;
+}
+
+.build__name {
+	font-size: 16px;
+	cursor: pointer;
+	border: 2px solid lightgrey;
+	width: 100%;
+	padding: 10px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	box-sizing: border-box;
+}
+
+.build__name:hover {
+	border-color: black;
+}
+
+.build__controls {
+	display: flex;
+	justify-content: center;
+	align-self: end;
+}
+
+.build__remove {
+	color: lightgrey;
+	border: none;
+	background-color: transparent;
+	font-size: 14px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+}
+
+.build__remove .feather {
+	width: 16px;
+	height: 16px;
+}
+
+.build__remove:hover {
+	color: black;
 }
