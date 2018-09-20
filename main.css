@@ -63,6 +63,11 @@
 	display: none;
 }
 
+.divider {
+	border: 1px solid lightgrey;
+	margin: 20px 0;
+}
+
 .current-build-pane--hidden {
 	display: none;
 }
@@ -70,27 +75,37 @@
 .current-build {
 	display: flex;
 	flex-direction: column;
-	padding: 10px;
+}
+
+.current-build__header {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 30px;
+}
+
+.current-build__title {
+	font-family: "Audiowide", sans-serif;
+	font-size: 20px;
+}
+
+.current-build__header-buttons {
+	display: flex;
 }
 
 .current-build__name-container {
 	display: flex;
 	justify-content: center;
+	padding: 10px;
 }
 
 .current-build__name {
 	font-family: "Roboto", sans-serif;
-	font-size: 25px;
+	font-size: 22px;
 	display: block;
 	border: 2px dashed lightgrey;
 	margin-bottom: 5px;
 	width: 100%;
-	padding: 3px 5px;
-}
-
-.current-build__controls {
-	display: flex;
-	align-self: flex-end;
+	padding: 10px;
 }
 
 .current-build__name:hover {
@@ -109,6 +124,7 @@
 	font-family: "Roboto", sans-serif;
 	font-size: 14px;
 	cursor: pointer;
+	color: grey;
 }
 
 .current-build__button .feather {
@@ -117,9 +133,17 @@
 	margin-right: 3px;
 }
 
+.current-build__button:hover {
+	color: black;
+}
+
 .current-build__button--disabled {
 	color: lightgrey;
 	cursor: default;
+}
+
+.current-build__button--disabled:hover {
+	color: lightgrey;
 }
 
 .current-build__button--hidden {
@@ -189,19 +213,13 @@
 	right: 5px;
 	font-family: "Roboto", sans-serif;
 	font-size: 14px;
+	color: grey;
+	display: flex;
 }
 
 .timing__remove .feather {
 	width: 16px;
 	height: 16px;
-}
-
-.timing:hover .timing__remove {
-	display: flex;
-}
-
-.timing:focus .timing__remove {
-	display: flex;
 }
 
 .timing__remove:hover {
@@ -219,9 +237,10 @@
 	border: none;
 	background: none;
 	font-family: "Roboto", sans-serif;
-	font-size: 16px;
+	font-size: 14px;
 	cursor: pointer;
 	margin-top: 10px;
+	color: grey;
 }
 
 .timings__add .feather {
@@ -229,8 +248,47 @@
 	height: 16px;
 }
 
+.timings__add:hover {
+	color: black;
+}
+
 .builds-pane--hidden {
 	display: none;
+}
+
+.builds__header {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 30px;
+}
+
+.builds__title {
+	font-family: "Audiowide", sans-serif;
+	font-size: 20px;
+}
+
+.builds__header-buttons {
+	display: flex;
+}
+
+.builds__button {
+	display: flex;
+	align-items: center;
+	border: none;
+	background-color: transparent;
+	cursor: pointer;
+	font-size: 14px;
+	font-family: "Roboto", sans-serif;
+	color: grey;
+}
+
+.builds__button .feather {
+	width: 16px;
+	height: 16px;
+}
+
+.builds__button:hover {
+	color: black;
 }
 
 .build {
@@ -238,12 +296,12 @@
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	margin-top: 20px;
+	margin-top: 5px;
 	padding: 10px;
 }
 
 .build__name {
-	font-size: 16px;
+	font-size: 22px;
 	cursor: pointer;
 	border: 2px solid lightgrey;
 	width: 100%;
@@ -272,6 +330,7 @@
 	display: flex;
 	align-items: center;
 	cursor: pointer;
+	color: grey;
 }
 
 .build__remove .feather {
