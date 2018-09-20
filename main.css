@@ -36,9 +36,8 @@
 	cursor: pointer;
 }
 
-.stopwatch__reset--disabled {
-	cursor: default;
-	color: grey;
+.stopwatch__reset--hidden {
+	display: none;
 }
 
 .stopwatch__reset svg {
@@ -324,9 +323,10 @@
 	display: flex;
 	justify-content: center;
 	align-self: end;
+	margin-top: 5px;
 }
 
-.build__remove {
+.build__button {
 	color: lightgrey;
 	border: none;
 	background-color: transparent;
@@ -337,11 +337,15 @@
 	color: grey;
 }
 
-.build__remove .feather {
+.build__button .feather {
 	width: 16px;
 	height: 16px;
 }
 
-.build__remove:hover {
+.build__button .feather-copy {
+	margin-right: 2px;
+}
+
+.build__button:hover {
 	color: black;
 }

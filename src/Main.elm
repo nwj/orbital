@@ -17,9 +17,7 @@ import Timing exposing (Timing)
 
 
 
--- TODO (nwj) Style build management
 -- TODO (nwj) Automate build process and deployment
--- TODO (nwj) Add build duplication
 -- TODO (nwj) Add ability to export or import a build
 
 
@@ -121,6 +119,7 @@ type Msg
     | RemoveTiming Timing
     | AddTiming
     | ToggleBuildManagement
+    | CopyBuild Build
     | RemoveBuild Build
     | NewBuild
     | SelectBuild Build
@@ -328,6 +327,24 @@ update msg model =
             , Cmd.none
             )
 
+        CopyBuild build ->
+            let
+                ( newIdInt, newSeed ) =
+                    Random.step anyPositiveInt model.idSeed
+
+                newId =
+                    String.fromInt newIdInt
+
+                newBuildName =
+                    "Copy of " ++ build.name
+
+                newBuild =
+                    { build | id = newId, name = newBuildName }
+            in
+            ( { model | currentBuild = newBuild, idSeed = newSeed, showBuildManagement = False }
+            , Cmd.none
+            )
+
         RemoveBuild build ->
             let
                 updatedBuilds =
@@ -404,7 +421,7 @@ viewStopwatch stopwatch =
         [ button
             [ classList
                 [ ( "stopwatch__reset", True )
-                , ( "stopwatch__reset--disabled", stopwatch.time == 0 && Stopwatch.isPaused stopwatch )
+                , ( "stopwatch__reset--hidden", stopwatch.time == 0 && Stopwatch.isPaused stopwatch )
                 ]
             , onClick ResetStopwatch
             ]
@@ -630,8 +647,11 @@ viewBuild build =
         [ div [ class "build__name", onClick <| SelectBuild build ] [ text build.name ]
         , div [ class "build__controls" ]
             [ button
-                [ class "build__remove", onClick <| RemoveBuild build ]
-                [ FeatherIcons.x, text "Delete" ]
+                [ class "build__button", onClick <| CopyBuild build ]
+                [ FeatherIcons.copy, text "Copy Build" ]
+            , button
+                [ class "build__button", onClick <| RemoveBuild build ]
+                [ FeatherIcons.x, text "Remove Build" ]
             ]
         ]
 
