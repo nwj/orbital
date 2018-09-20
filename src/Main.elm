@@ -454,7 +454,7 @@ viewCurrentBuildControls : Model -> Html Msg
 viewCurrentBuildControls model =
     div [ class "current-build" ]
         [ div [ class "current-build__header" ]
-            [ div [ class "current-build__title" ] [ text "Current Build" ]
+            [ div [ class "current-build__title" ] [ text "ACTIVE BUILD" ]
             , div [ class "current-build__header-buttons" ]
                 [ button
                     [ classList
@@ -602,14 +602,14 @@ viewBuildManagement model =
             ]
         ]
         [ div [ class "builds__header" ]
-            [ div [ class "builds__title" ] [ text "Builds" ]
+            [ div [ class "builds__title" ] [ text "BUILDS" ]
             , div [ class "builds__header-buttons" ]
                 [ button
                     [ class "builds__button"
                     , onClick ToggleBuildManagement
                     ]
                     [ FeatherIcons.arrowLeft
-                    , text "Back To Current Build"
+                    , text "To Active Build"
                     ]
                 , button
                     [ class "builds__button"

@@ -65,7 +65,7 @@
 
 .divider {
 	border: 1px solid lightgrey;
-	margin: 20px 0;
+	margin: 10px 0;
 }
 
 .current-build-pane--hidden {
@@ -78,9 +78,8 @@
 }
 
 .current-build__header {
-	display: flex;
-	justify-content: space-between;
-	margin-bottom: 30px;
+	padding: 10px;
+	margin-bottom: 10px;
 }
 
 .current-build__title {
@@ -90,6 +89,7 @@
 
 .current-build__header-buttons {
 	display: flex;
+	margin-top: 5px;
 }
 
 .current-build__name-container {
@@ -125,6 +125,8 @@
 	font-size: 14px;
 	cursor: pointer;
 	color: grey;
+	margin: 0 10px 0 0 ;
+	padding: 0;
 }
 
 .current-build__button .feather {
@@ -257,9 +259,8 @@
 }
 
 .builds__header {
-	display: flex;
-	justify-content: space-between;
-	margin-bottom: 30px;
+	padding: 10px;
+	margin-bottom: 10px;
 }
 
 .builds__title {
@@ -269,6 +270,7 @@
 
 .builds__header-buttons {
 	display: flex;
+	margin-top: 5px;
 }
 
 .builds__button {
@@ -280,6 +282,8 @@
 	font-size: 14px;
 	font-family: "Roboto", sans-serif;
 	color: grey;
+	padding: 0;
+	margin: 0 10px 0 0;
 }
 
 .builds__button .feather {
