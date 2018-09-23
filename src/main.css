@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto|Audiowide");
+
 .root {
 	max-width: 375px;
 	margin: auto;
@@ -112,7 +114,7 @@
 }
 
 .current-build__name:focus {
-	border: 2px dashed black;`
+	border: 2px dashed black;
 }
 
 .current-build__button {

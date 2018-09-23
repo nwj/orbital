@@ -22,11 +22,15 @@ import Timing exposing (Timing)
 
 
 main =
-    Browser.element
+    Browser.document
         { init = init
         , update = update
         , subscriptions = subscriptions
-        , view = view
+        , view =
+            \m ->
+                { title = "Orbital"
+                , body = [ view m ]
+                }
         }
 
 
