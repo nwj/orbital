@@ -1,5 +1,9 @@
 @import url("https://fonts.googleapis.com/css?family=Roboto|Audiowide");
 
+button {
+	outline: none;
+}
+
 .root {
 	max-width: 375px;
 	margin: auto;
@@ -36,6 +40,7 @@
 	flex-grow: 5;
 	padding: 10px;
 }
+
 .stopwatch__reset {
 	height: 35px;
 	width: 35px;
@@ -43,24 +48,29 @@
 	border: none;
 	margin-right: 5px;
 	cursor: pointer;
+	background-color: transparent;
 }
 
 .stopwatch__reset--hidden {
 	display: none;
 }
 
-.stopwatch__reset svg {
-	height: 20px;
-	width: 20px;
+.stopwatch__reset .feather {
+	height: 25px;
+	width: 25px;
 }
 
 .stopwatch__toggle {
-	height: 50px;
-	width: 50px;
 	border-radius: 50%;
 	border: none;
 	margin-right: 10px;
 	cursor: pointer;
+	background-color: transparent;
+}
+
+.stopwatch__toggle .feather {
+	width: 35px;
+	height: 35px;
 }
 
 .stopwatch__clock {

@@ -1,4 +1,16 @@
-module FeatherIcons exposing (arrowLeft, copy, github, heart, pause, play, plus, repeat, rotateCcw, save, x)
+module FeatherIcons exposing
+    ( arrowLeft
+    , copy
+    , github
+    , heart
+    , pause
+    , play
+    , plus
+    , repeat
+    , rotateCcw
+    , save
+    , x
+    )
 
 import Html exposing (Html)
 import Svg exposing (Svg, svg)
