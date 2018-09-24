@@ -4,6 +4,13 @@
 	max-width: 375px;
 	margin: auto;
 	font-family: "Roboto", sans-serif;
+	display: flex;
+	flex-direction: column;
+	min-height: 97vh;
+}
+
+.main-content {
+	flex: 1;
 }
 
 .header {
@@ -350,4 +357,36 @@
 
 .build__button:hover {
 	color: black;
+}
+
+.footer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-top: 100px;
+}
+
+.footer__item {
+	color: grey;
+	font-size: 14px;
+	margin: 0 15px;
+}
+
+.footer__link {
+	display: flex;
+	align-items: center;
+	color: grey;
+	font-size: 14px;
+	text-decoration: none;
+	margin: 0 15px;
+}
+
+.footer__link:hover {
+	color: black;
+}
+
+.footer__link .feather {
+	height: 16px;
+	width: 16px;
+	margin: 0 3px;
 }

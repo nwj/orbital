@@ -5,7 +5,7 @@ import Build exposing (Build)
 import Dict exposing (Dict)
 import FeatherIcons
 import Html exposing (Attribute, Html, a, button, div, input, span, text)
-import Html.Attributes exposing (class, classList, placeholder, type_, value)
+import Html.Attributes exposing (class, classList, href, placeholder, target, type_, value)
 import Html.Events exposing (on, onClick, onInput, targetValue)
 import Html.Lazy exposing (lazy)
 import Json.Decode exposing (field)
@@ -17,7 +17,7 @@ import Timing exposing (Timing)
 
 
 
--- TODO (nwj) Automate build process and deployment
+-- TODO (nwj) Add build progress bar / other animations
 -- TODO (nwj) Add ability to export or import a build
 
 
@@ -406,11 +406,14 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div [ class "root" ]
-        [ viewHeader
-        , viewStopwatch model.stopwatch
-        , div [ class "divider" ] []
-        , viewCurrentBuild model
-        , viewBuildManagement model
+        [ div [ class "main-content" ]
+            [ viewHeader
+            , viewStopwatch model.stopwatch
+            , div [ class "divider" ] []
+            , viewCurrentBuild model
+            , viewBuildManagement model
+            ]
+        , viewFooter
         ]
 
 
@@ -656,6 +659,30 @@ viewBuild build =
             , button
                 [ class "build__button", onClick <| RemoveBuild build ]
                 [ FeatherIcons.x, text "Remove Build" ]
+            ]
+        ]
+
+
+viewFooter : Html Msg
+viewFooter =
+    div [ class "footer" ]
+        [ div [ class "footer__item" ] [ text "© 2018" ]
+        , a
+            [ class "footer__link"
+            , href "https://nwj.cc"
+            , target "_blank"
+            ]
+            [ text "Made with"
+            , FeatherIcons.heart
+            , text "by NWJ"
+            ]
+        , a
+            [ class "footer__link"
+            , href "https://github.com/nwj/orbital"
+            , target "_blank"
+            ]
+            [ FeatherIcons.github
+            , text "Github"
             ]
         ]
 
