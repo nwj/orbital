@@ -17,7 +17,6 @@ import Timing exposing (Timing)
 
 
 
--- TODO (nwj) Add build progress bar / other animations
 -- TODO (nwj) Add ability to export or import a build
 
 
@@ -524,7 +523,7 @@ viewTimings model =
     div [ class "timings" ]
         [ div
             [ class "timings__list" ]
-            (List.map viewTiming <|
+            (List.map (\t -> viewTiming t model) <|
                 List.sortBy .time <|
                     Dict.values model.currentBuild.timings
             )
@@ -538,9 +537,14 @@ viewTimings model =
         ]
 
 
-viewTiming : Timing -> Html Msg
-viewTiming timing =
-    div [ class "timing" ]
+viewTiming : Timing -> Model -> Html Msg
+viewTiming timing model =
+    div
+        [ classList
+            [ ( "timing", True )
+            , ( "timing--flash", viewTimingShouldFlash timing model )
+            ]
+        ]
         [ lazy viewTimingTimes timing
         , input
             [ class "timing__phrase"
@@ -615,6 +619,13 @@ viewTimingTimes timing =
                 ]
                 []
             ]
+
+
+viewTimingShouldFlash : Timing -> Model -> Bool
+viewTimingShouldFlash timing model =
+    Stopwatch.isPlaying model.stopwatch
+        && (timing.time >= model.stopwatch.time - 4)
+        && (timing.time <= model.stopwatch.time + 1)
 
 
 viewBuildManagement : Model -> Html Msg

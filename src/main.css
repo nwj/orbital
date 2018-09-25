@@ -178,6 +178,28 @@ button {
 	position: relative;
 }
 
+.timing--flash .timing__time {
+	animation-name: flash;
+	animation-duration: 2s;
+	animation-iteration-count: 1;
+	animation-timing-function: ease-in-out;
+}
+
+.timing--flash .timing__phrase {
+	animation-name: flash;
+	animation-duration: 2s;
+	animation-iteration-count: 1;
+	animation-timing-function: ease-in-out;
+}
+
+@keyframes flash {
+	50% {
+		border-color: red;
+		color: red;
+	}
+
+}
+
 .timing__times {
 	display: flex;
 	margin-right: 15px;
