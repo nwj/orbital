@@ -180,14 +180,14 @@ button {
 
 .timing--flash .timing__time {
 	animation-name: flash;
-	animation-duration: 2s;
+	animation-duration: 3s;
 	animation-iteration-count: 1;
 	animation-timing-function: ease-in-out;
 }
 
 .timing--flash .timing__phrase {
 	animation-name: flash;
-	animation-duration: 2s;
+	animation-duration: 3s;
 	animation-iteration-count: 1;
 	animation-timing-function: ease-in-out;
 }

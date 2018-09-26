@@ -134,19 +134,22 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick _ ->
-            if Stopwatch.isPlaying model.stopwatch then
-                if Build.anyTimingsByTime model.stopwatch.time model.currentBuild then
-                    ( { model | stopwatch = Stopwatch.tick model.stopwatch }
-                    , textToSpeechQueue (Json.Encode.list Json.Encode.string (List.map .phrase (Build.timingsByTime model.stopwatch.time model.currentBuild)))
-                    )
-
-                else
-                    ( { model | stopwatch = Stopwatch.tick model.stopwatch }
-                    , Cmd.none
-                    )
+            {-
+               We add 1 to stopwatch.time throughout here so that timings trigger text to speech at the
+               beginning of each second rather than at the end of each second. One consequence of this
+               design choice is that timings with time == 0 will never trigger. As a result, there is code
+               elsewhere to prevent the creation of timings with time == 0.
+            -}
+            if Build.anyTimingsByTime (model.stopwatch.time + 1) model.currentBuild then
+                ( { model | stopwatch = Stopwatch.tick model.stopwatch }
+                , textToSpeechQueue <|
+                    Json.Encode.list Json.Encode.string <|
+                        List.map .phrase <|
+                            Build.timingsByTime (model.stopwatch.time + 1) model.currentBuild
+                )
 
             else
-                ( model
+                ( { model | stopwatch = Stopwatch.tick model.stopwatch }
                 , Cmd.none
                 )
 
@@ -197,7 +200,7 @@ update msg model =
                     newSeconds - oldSeconds
 
                 newTime =
-                    timing.time + secondsDiff
+                    max 1 (timing.time + secondsDiff)
 
                 newTiming =
                     { timing | time = newTime }
@@ -227,7 +230,7 @@ update msg model =
                     newMinutes - oldMinutes
 
                 newTime =
-                    timing.time + (minutesDiff * 60)
+                    max 1 (timing.time + (minutesDiff * 60))
 
                 newTiming =
                     { timing | time = newTime }
@@ -257,7 +260,7 @@ update msg model =
                     newHours - oldHours
 
                 newTime =
-                    timing.time + (hoursDiff * 3600)
+                    max 1 (timing.time + (hoursDiff * 3600))
 
                 newTiming =
                     { timing | time = newTime }
@@ -310,7 +313,7 @@ update msg model =
                             t.time + 1
 
                         Nothing ->
-                            0
+                            1
 
                 newTiming =
                     Timing newId newTime ""
@@ -397,7 +400,11 @@ currentBuildCanSave model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every 1000 Tick
+    if Stopwatch.isPlaying model.stopwatch then
+        Time.every 1000 Tick
+
+    else
+        Sub.none
 
 
 
@@ -626,7 +633,7 @@ viewTimingTimes timing =
 viewTimingShouldFlash : Timing -> Model -> Bool
 viewTimingShouldFlash timing model =
     Stopwatch.isPlaying model.stopwatch
-        && (timing.time >= model.stopwatch.time - 4)
+        && (timing.time >= model.stopwatch.time - 1)
         && (timing.time <= model.stopwatch.time + 1)
 
 
