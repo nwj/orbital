@@ -18,6 +18,8 @@ import Timing exposing (Timing)
 
 
 -- TODO (nwj) Add ability to export or import a build
+-- TODO (nwj) Add some preset builds
+-- TODO (nwj) Look into giving stopwatch milliseconds precision
 
 
 main =
