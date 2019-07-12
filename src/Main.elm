@@ -94,7 +94,7 @@ flagsDecoder : Json.Decode.Decoder Flags
 flagsDecoder =
     Json.Decode.map2 Flags
         (field "seedInt" Json.Decode.int)
-        (field "storedBuilds" <| Json.Decode.dict Build.decodeBuild)
+        (field "storedBuilds" <| Json.Decode.dict Build.jsonDecodeBuild)
 
 
 decodeFlags : Json.Decode.Value -> Flags
@@ -182,7 +182,7 @@ update msg model =
                         Dict.insert model.currentBuild.id model.currentBuild model.builds
                 in
                 ( { model | builds = updatedBuilds }
-                , buildsToStore <| Json.Encode.dict identity Build.encodeBuild updatedBuilds
+                , buildsToStore <| Json.Encode.dict identity Build.jsonEncodeBuild updatedBuilds
                 )
 
             else
@@ -359,7 +359,7 @@ update msg model =
                     Dict.remove build.id model.builds
             in
             ( { model | builds = updatedBuilds }
-            , buildsToStore <| Json.Encode.dict identity Build.encodeBuild updatedBuilds
+            , buildsToStore <| Json.Encode.dict identity Build.jsonEncodeBuild updatedBuilds
             )
 
         NewBuild ->

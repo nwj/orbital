@@ -1,9 +1,9 @@
 module Timing exposing
     ( Timing
     , anyTimingsByTime
-    , decodeTiming
-    , encodeTiming
     , equal
+    , jsonDecodeTiming
+    , jsonEncodeTiming
     , timingsByTime
     , toClockHours
     , toClockMinutes
@@ -67,16 +67,16 @@ toClockSeconds timing =
 -- JSON
 
 
-decodeTiming : Json.Decode.Decoder Timing
-decodeTiming =
+jsonDecodeTiming : Json.Decode.Decoder Timing
+jsonDecodeTiming =
     Json.Decode.map3 Timing
         (field "id" Json.Decode.string)
         (field "time" Json.Decode.int)
         (field "phrase" Json.Decode.string)
 
 
-encodeTiming : Timing -> Json.Encode.Value
-encodeTiming timing =
+jsonEncodeTiming : Timing -> Json.Encode.Value
+jsonEncodeTiming timing =
     Json.Encode.object
         [ ( "id", Json.Encode.string <| timing.id )
         , ( "time", Json.Encode.int <| timing.time )

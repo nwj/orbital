@@ -2,10 +2,10 @@ module Build exposing
     ( Build
     , addTiming
     , anyTimingsByTime
-    , decodeBuild
-    , encodeBuild
     , equal
     , init
+    , jsonDecodeBuild
+    , jsonEncodeBuild
     , latestTiming
     , removeTiming
     , timingsByTime
@@ -93,18 +93,18 @@ latestTiming build =
 -- JSON
 
 
-decodeBuild : Json.Decode.Decoder Build
-decodeBuild =
+jsonDecodeBuild : Json.Decode.Decoder Build
+jsonDecodeBuild =
     Json.Decode.map3 Build
         (field "id" Json.Decode.string)
         (field "name" Json.Decode.string)
-        (field "timings" <| Json.Decode.dict Timing.decodeTiming)
+        (field "timings" <| Json.Decode.dict Timing.jsonDecodeTiming)
 
 
-encodeBuild : Build -> Json.Encode.Value
-encodeBuild build =
+jsonEncodeBuild : Build -> Json.Encode.Value
+jsonEncodeBuild build =
     Json.Encode.object
         [ ( "id", Json.Encode.string <| build.id )
         , ( "name", Json.Encode.string <| build.name )
-        , ( "timings", Json.Encode.dict identity Timing.encodeTiming build.timings )
+        , ( "timings", Json.Encode.dict identity Timing.jsonEncodeTiming build.timings )
         ]
