@@ -1,10 +1,10 @@
-const path = require('path');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require("path");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   entry: {
-    app: './src/index.js'
+    app: "./src/index.js"
   },
   plugins: [
     new CleanWebpackPlugin(),
@@ -17,14 +17,11 @@ module.exports = {
       {
         test: /\.css$/,
         exclude: [/elm-stuff/, /node_modules/],
-        use: [
-            { loader: "style-loader" },
-            { loader: "css-loader" }
-        ]
-      },
+        use: [{ loader: "style-loader" }, { loader: "css-loader" }]
+      }
     ]
   },
   output: {
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, "dist")
   }
 };

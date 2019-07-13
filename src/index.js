@@ -1,12 +1,12 @@
-'use strict';
+"use strict";
 
-require("./main.css")
-const {Elm} = require("./Main.elm")
+require("./main.css");
+const { Elm } = require("./Main.elm");
 
 var app = Elm.Main.init({
   flags: {
-    "seedInt": Date.now(),
-    "storedBuilds" : JSON.parse(localStorage.getItem('storedBuilds')) || {},
+    seedInt: Date.now(),
+    storedBuilds: JSON.parse(localStorage.getItem("storedBuilds")) || {}
   }
 });
 
@@ -19,5 +19,5 @@ app.ports.textToSpeechQueue.subscribe(function(data) {
 });
 
 app.ports.buildsToStore.subscribe(function(data) {
-  localStorage.setItem('storedBuilds', JSON.stringify(data));
+  localStorage.setItem("storedBuilds", JSON.stringify(data));
 });

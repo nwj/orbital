@@ -1,10 +1,10 @@
-const merge = require('webpack-merge');
-const common = require('./webpack.common.js')
+const merge = require("webpack-merge");
+const common = require("./webpack.common.js");
 
 module.exports = merge(common, {
-  mode: 'development',
+  mode: "development",
   devServer: {
-    contentBase: './dist'
+    contentBase: "./dist"
   },
   module: {
     rules: [
@@ -12,19 +12,19 @@ module.exports = merge(common, {
         test: /\.elm$/,
         exclude: [/elm-stuff/, /node_modules/],
         use: [
-            { loader: "elm-hot-webpack-loader" },
-            {
-              loader: "elm-webpack-loader",
-              options: {
-                debug: true,
-                forceWatch: true
-              } 
+          { loader: "elm-hot-webpack-loader" },
+          {
+            loader: "elm-webpack-loader",
+            options: {
+              debug: true,
+              forceWatch: true
             }
+          }
         ]
-      },
+      }
     ]
   },
   output: {
-    filename: '[name].js',
+    filename: "[name].js"
   }
 });
