@@ -1,6 +1,7 @@
 port module Main exposing (main)
 
 import Browser
+import Browser.Navigation as Nav
 import Build exposing (Build)
 import Dict exposing (Dict)
 import FeatherIcons
@@ -14,6 +15,7 @@ import Random
 import Stopwatch exposing (Stopwatch)
 import Time
 import Timing exposing (Timing)
+import Url
 
 
 
@@ -23,7 +25,7 @@ import Timing exposing (Timing)
 
 
 main =
-    Browser.document
+    Browser.application
         { init = init
         , update = update
         , subscriptions = subscriptions
@@ -32,6 +34,8 @@ main =
                 { title = "Orbital"
                 , body = [ view m ]
                 }
+        , onUrlChange = UrlChanged
+        , onUrlRequest = LinkClicked
         }
 
 
@@ -40,7 +44,9 @@ main =
 
 
 type alias Model =
-    { stopwatch : Stopwatch
+    { navKey : Nav.Key
+    , url : Url.Url
+    , stopwatch : Stopwatch
     , currentBuild : Build
     , builds : Dict String Build
     , idSeed : Random.Seed
@@ -48,8 +54,8 @@ type alias Model =
     }
 
 
-init : Json.Decode.Value -> ( Model, Cmd Msg )
-init flags =
+init : Json.Decode.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key =
     let
         decodedFlags =
             decodeFlags flags
@@ -60,7 +66,7 @@ init flags =
         newBuildId =
             String.fromInt newBuildIdInt
     in
-    ( Model Stopwatch.init (Build.init newBuildId) decodedFlags.storedBuilds newSeed False
+    ( Model key url Stopwatch.init (Build.init newBuildId) decodedFlags.storedBuilds newSeed False
     , Cmd.none
     )
 
@@ -112,7 +118,9 @@ decodeFlags encodedFlags =
 
 
 type Msg
-    = Tick Time.Posix
+    = LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
+    | Tick Time.Posix
     | ResetStopwatch
     | ToggleStopwatch
     | CurrentBuildNameChange String
@@ -133,6 +141,19 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.navKey (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        UrlChanged url ->
+            ( { model | url = url }
+            , Cmd.none
+            )
+
         Tick _ ->
             {-
                We add 1 to stopwatch.time throughout here so that timings trigger text to speech at the
