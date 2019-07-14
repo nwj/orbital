@@ -15,7 +15,9 @@ import Random
 import Stopwatch exposing (Stopwatch)
 import Time
 import Timing exposing (Timing)
-import Url
+import Url exposing (Url)
+import Url.Builder
+import Url.Parser
 
 
 
@@ -34,8 +36,8 @@ main =
                 { title = "Orbital"
                 , body = [ view m ]
                 }
-        , onUrlChange = UrlChanged
-        , onUrlRequest = LinkClicked
+        , onUrlChange = ChangeUrl
+        , onUrlRequest = ClickLink
         }
 
 
@@ -45,16 +47,15 @@ main =
 
 type alias Model =
     { navKey : Nav.Key
-    , url : Url.Url
+    , route : Route
     , stopwatch : Stopwatch
     , currentBuild : Build
     , builds : Dict String Build
     , idSeed : Random.Seed
-    , showBuildManagement : Bool
     }
 
 
-init : Json.Decode.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init : Json.Decode.Value -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
         decodedFlags =
@@ -65,15 +66,44 @@ init flags url key =
 
         newBuildId =
             String.fromInt newBuildIdInt
+
+        initialBuild =
+            Build.init newBuildId
+
+        ( route, cmd ) =
+            case Url.Parser.parse routeParser url of
+                Just r ->
+                    ( r, Cmd.none )
+
+                -- Note that we're rewriting the url back to root in this case
+                Nothing ->
+                    ( Root, Nav.replaceUrl key <| Url.Builder.absolute [] [] )
     in
-    ( Model key url Stopwatch.init (Build.init newBuildId) decodedFlags.storedBuilds newSeed False
-    , Cmd.none
+    ( Model key route Stopwatch.init initialBuild decodedFlags.storedBuilds newSeed
+    , cmd
     )
 
 
 anyPositiveInt : Random.Generator Int
 anyPositiveInt =
     Random.int 0 Random.maxInt
+
+
+
+-- ROUTES
+
+
+type Route
+    = Root
+    | Builds
+
+
+routeParser : Url.Parser.Parser (Route -> a) a
+routeParser =
+    Url.Parser.oneOf
+        [ Url.Parser.map Root Url.Parser.top
+        , Url.Parser.map Builds (Url.Parser.s "builds")
+        ]
 
 
 
@@ -118,8 +148,8 @@ decodeFlags encodedFlags =
 
 
 type Msg
-    = LinkClicked Browser.UrlRequest
-    | UrlChanged Url.Url
+    = ClickLink Browser.UrlRequest
+    | ChangeUrl Url
     | Tick Time.Posix
     | ResetStopwatch
     | ToggleStopwatch
@@ -131,7 +161,6 @@ type Msg
     | TimingPhraseChange Timing String
     | RemoveTiming Timing
     | AddTiming
-    | ToggleBuildManagement
     | CopyBuild Build
     | RemoveBuild Build
     | NewBuild
@@ -141,16 +170,25 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        LinkClicked urlRequest ->
+        ClickLink urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model, Nav.pushUrl model.navKey (Url.toString url) )
+                    ( model, Nav.pushUrl model.navKey <| Url.toString url )
 
-                Browser.External href ->
-                    ( model, Nav.load href )
+                Browser.External url ->
+                    ( model, Nav.load url )
 
-        UrlChanged url ->
-            ( { model | url = url }
+        ChangeUrl url ->
+            let
+                route =
+                    case Url.Parser.parse routeParser url of
+                        Just r ->
+                            r
+
+                        Nothing ->
+                            Root
+            in
+            ( { model | route = route }
             , Cmd.none
             )
 
@@ -192,7 +230,7 @@ update msg model =
                 newBuild =
                     { currentBuild | name = newName }
             in
-            ( { model | currentBuild = newBuild, showBuildManagement = False }
+            ( { model | currentBuild = newBuild }
             , Cmd.none
             )
 
@@ -351,11 +389,6 @@ update msg model =
             , Cmd.none
             )
 
-        ToggleBuildManagement ->
-            ( { model | showBuildManagement = not model.showBuildManagement }
-            , Cmd.none
-            )
-
         CopyBuild build ->
             let
                 ( newIdInt, newSeed ) =
@@ -370,8 +403,8 @@ update msg model =
                 newBuild =
                     { build | id = newId, name = newBuildName }
             in
-            ( { model | currentBuild = newBuild, idSeed = newSeed, showBuildManagement = False }
-            , Cmd.none
+            ( { model | currentBuild = newBuild, idSeed = newSeed }
+            , Nav.pushUrl model.navKey <| Url.Builder.absolute [] []
             )
 
         RemoveBuild build ->
@@ -391,13 +424,13 @@ update msg model =
                 newId =
                     String.fromInt newIdInt
             in
-            ( { model | currentBuild = Build.init newId, idSeed = newSeed, showBuildManagement = False }
+            ( { model | currentBuild = Build.init newId, idSeed = newSeed }
             , Cmd.none
             )
 
         SelectBuild build ->
-            ( { model | currentBuild = build, showBuildManagement = False }
-            , Cmd.none
+            ( { model | currentBuild = build }
+            , Nav.pushUrl model.navKey <| Url.Builder.absolute [] []
             )
 
 
@@ -439,8 +472,11 @@ view model =
             [ viewHeader
             , viewStopwatch model.stopwatch
             , div [ class "divider" ] []
-            , viewCurrentBuild model
-            , viewBuildManagement model
+            , if model.route == Root then
+                viewCurrentBuild model
+
+              else
+                viewBuildManagement model
             ]
         , viewFooter
         ]
@@ -493,11 +529,7 @@ viewStopwatchToggleButtonIcon stopwatch =
 viewCurrentBuild : Model -> Html Msg
 viewCurrentBuild model =
     div
-        [ classList
-            [ ( "current-build-pane", True )
-            , ( "current-build-pane--hidden", model.showBuildManagement )
-            ]
-        ]
+        [ class "current-build-pane" ]
         [ viewCurrentBuildControls model
         , viewTimings model
         ]
@@ -517,12 +549,12 @@ viewCurrentBuildControls model =
                     , onClick NewBuild
                     ]
                     [ FeatherIcons.plus, text "New Build" ]
-                , button
+                , a
                     [ classList
                         [ ( "current-build__button", True )
                         , ( "current-build__button--hidden", Dict.size model.builds < 1 )
                         ]
-                    , onClick ToggleBuildManagement
+                    , href <| Url.Builder.absolute [ "builds" ] []
                     ]
                     [ FeatherIcons.repeat, text "Swap Build" ]
                 , button
@@ -661,17 +693,13 @@ viewTimingShouldFlash timing model =
 viewBuildManagement : Model -> Html Msg
 viewBuildManagement model =
     div
-        [ classList
-            [ ( "builds-pane", True )
-            , ( "builds-pane--hidden", not model.showBuildManagement )
-            ]
-        ]
+        [ class "builds-pane" ]
         [ div [ class "builds__header" ]
             [ div [ class "builds__title" ] [ text "BUILDS" ]
             , div [ class "builds__header-buttons" ]
-                [ button
+                [ a
                     [ class "builds__button"
-                    , onClick ToggleBuildManagement
+                    , href <| Url.Builder.absolute [] []
                     ]
                     [ FeatherIcons.arrowLeft
                     , text "To Active Build"

@@ -86,10 +86,6 @@ button {
   margin: 10px 0;
 }
 
-.current-build-pane--hidden {
-  display: none;
-}
-
 .current-build {
   display: flex;
   flex-direction: column;
@@ -145,6 +141,7 @@ button {
   color: grey;
   margin: 0 10px 0 0;
   padding: 0;
+  text-decoration: none;
 }
 
 .current-build__button .feather {
@@ -293,10 +290,6 @@ button {
   color: black;
 }
 
-.builds-pane--hidden {
-  display: none;
-}
-
 .builds__header {
   padding: 10px;
   margin-bottom: 10px;
@@ -323,6 +316,7 @@ button {
   color: grey;
   padding: 0;
   margin: 0 10px 0 0;
+  text-decoration: none;
 }
 
 .builds__button .feather {
