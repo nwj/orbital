@@ -1,31 +1,66 @@
-const merge = require("webpack-merge");
-const common = require("./webpack.common.js");
+const path = require("path");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin");
 
-module.exports = merge(common, {
+module.exports = {
   mode: "development",
-  devServer: {
-    contentBase: "./dist",
-    historyApiFallback: true
+  entry: {
+    app: path.resolve(__dirname, "src/index.tsx"),
   },
   module: {
     rules: [
       {
-        test: /\.elm$/,
-        exclude: [/elm-stuff/, /node_modules/],
+        test: /\.(ts|js)x?$/,
+        exclude: [/node_modules/],
         use: [
-          { loader: "elm-hot-webpack-loader" },
           {
-            loader: "elm-webpack-loader",
+            loader: "babel-loader",
             options: {
-              debug: true,
-              forceWatch: true
-            }
-          }
-        ]
-      }
-    ]
+              plugins: ["react-refresh/babel"],
+            },
+          },
+        ],
+      },
+      {
+        test: /\.css$/i,
+        exclude: [/node_modules/],
+        use: [
+          {
+            loader: MiniCssExtractPlugin.loader,
+            options: {
+              hmr: true,
+            },
+          },
+          "css-loader",
+          "postcss-loader",
+        ],
+      },
+    ],
   },
+  resolve: {
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      filename: "./index.html",
+      template: "public/index.html",
+    }),
+    new MiniCssExtractPlugin({
+      filename: "[name].css",
+      chunkFilename: "[id].css",
+    }),
+    new ReactRefreshWebpackPlugin(),
+  ],
   output: {
-    filename: "[name].js"
-  }
-});
+    path: path.resolve(__dirname, "dist/"),
+    filename: "[name].js",
+  },
+  devServer: {
+    contentBase: "./dist",
+    port: 8080,
+    hotOnly: true,
+  },
+};

@@ -1,25 +1,39 @@
-const merge = require("webpack-merge");
-const common = require("./webpack.common.js");
+const path = require("path");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-module.exports = merge(common, {
+module.exports = {
   mode: "production",
+  entry: {
+    app: path.resolve(__dirname, "src/index.tsx"),
+  },
+
   module: {
     rules: [
       {
-        test: /\.elm$/,
-        exclude: [/elm-stuff/, /node_modules/],
-        use: [
-          {
-            loader: "elm-webpack-loader",
-            options: {
-              optimize: true
-            }
-          }
-        ]
-      }
-    ]
+        test: /\.(ts|js)x?$/,
+        use: "babel-loader",
+        exclude: [/node_modules/],
+      },
+      {
+        test: /\.css$/i,
+        exclude: [/node_modules/],
+        use: ["style-loader", "css-loader", "postcss-loader"],
+      },
+    ],
   },
+  resolve: {
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      filename: "./index.html",
+      template: "public/index.html",
+    }),
+  ],
   output: {
-    filename: "[name]-[hash].js"
-  }
-});
+    path: path.resolve(__dirname, "dist/"),
+    filename: "[name].[contenthash].js",
+  },
+};

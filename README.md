@@ -17,4 +17,4 @@ npm install
 npm run serve
 ```
 
-Orbital is written in Elm and packaged using Webpack.
+Orbital is written in React and TypeScript and packaged using Webpack.
