@@ -6,9 +6,7 @@ const ReactRefreshWebpackPlugin = require("@pmmmwh/react-refresh-webpack-plugin"
 
 module.exports = {
   mode: "development",
-  entry: {
-    app: path.resolve(__dirname, "src/index.tsx"),
-  },
+  entry: path.resolve(__dirname, "src/index.tsx"),
   module: {
     rules: [
       {
@@ -59,8 +57,6 @@ module.exports = {
     filename: "[name].js",
   },
   devServer: {
-    contentBase: "./dist",
-    port: 8080,
-    hotOnly: true,
+    hot: true
   },
 };
